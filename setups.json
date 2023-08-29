@@ -1,0 +1,26 @@
+[
+    {
+        "id": "test1",
+        "config": {
+            "tokenPair": "BTCTUSD",
+            "updateInterval": "1s",
+
+            "signals": ["test"]
+        },
+        "startingFirstAmount": "0",
+        "startingSecondAmount": "1000",
+        "firstAmount": "0",
+        "secondAmount": "1000",
+        "lastUpdate": 0,
+
+        "currentPriceAmount": "0",
+        "lowestPriceAmount": "99999999999",
+        "highestPriceAmount": "0",
+
+        "tradeEntryPriceAmount": "0",
+        "tradeLowestPriceAmount": "99999999999",
+        "tradeHighestPriceAmount": "0",
+
+        "transactions": []
+    }
+]

@@ -1,0 +1,11 @@
+{
+    "prices": {
+        "BTCTUSD": 3002
+    },
+    "signals" : {
+        "test": {
+            "port": 3003,
+            "tokens": ["BTCTUSD"]
+        }
+    }
+}
