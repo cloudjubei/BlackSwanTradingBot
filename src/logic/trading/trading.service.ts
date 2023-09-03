@@ -9,6 +9,7 @@ import { SignalsService } from '../signals/signals.service'
 import TokenPriceTimeModel from 'src/models/prices/TokenPriceTimeModel.dto'
 import SignalModel from 'src/models/signals/SignalModel.dto'
 import { WebsocketsService } from '../websockets/websockets.service'
+import { TradingSetupConfigModelUtils } from 'src/models/trading/TradingSetupConfigModel.dto'
 
 @Injectable()
 export class TradingService implements OnApplicationBootstrap
@@ -53,6 +54,7 @@ export class TradingService implements OnApplicationBootstrap
 
         console.log(`TradingService setup ${Date.now()}`)
 
+        this.transactionService.setup()
         this.setupWebsocketConnections()
 
         this.hasSetup = true
@@ -66,28 +68,28 @@ export class TradingService implements OnApplicationBootstrap
         for(const port of pricePorts){
             this.websocketsService.connect(port)
         }
-        const priceTokens = this.pricesService.getAllTokens()
-        for(const token of priceTokens){
-            const port = this.pricesService.getPort(token)
-            // this.websocketsService.listen(port, token, (price) => {
-            //     console.log("LISTENED TO PRICE: ", price)
-            // })
-        }
+        // const priceTokens = this.pricesService.getAllTokens()
+        // for(const token of priceTokens){
+        //     const port = this.pricesService.getPort(token)
+        //     this.websocketsService.listen(port, token, (price) => {
+        //         console.log("LISTENED TO PRICE: ", price)
+        //     })
+        // }
         
         const signalPorts = this.signalsService.getAllPorts()
         for(const port of signalPorts){
             this.websocketsService.connect(port)
         }
-        const signalIds = this.signalsService.getAllSignals()
-        for(const signalId of signalIds){
-            const port = this.signalsService.getSignalPort(signalId)
-            const tokens = this.signalsService.getSignalTokens(signalId)
-            for(const token of tokens){
-                // this.websocketsService.listen(port, token, (signal) => {
-                //     console.log("LISTENED TO SIGNAL: ", signal)
-                // })
-            }
-        }
+        // const signalIds = this.signalsService.getAllSignals()
+        // for(const signalId of signalIds){
+        //     const port = this.signalsService.getSignalPort(signalId)
+        //     const tokens = this.signalsService.getSignalTokens(signalId)
+        //     for(const token of tokens){
+        //         this.websocketsService.listen(port, token, (signal) => {
+        //             console.log("LISTENED TO SIGNAL: ", signal)
+        //         })
+        //     }
+        // }
     }
 
     private async updatePrices()
@@ -96,9 +98,13 @@ export class TradingService implements OnApplicationBootstrap
         for(const token of tokens){
 
             const port = this.pricesService.getPort(token)
-            const price = await this.websocketsService.sendMessage(port, "price_latest", token)
-            if (price){
-                this.pricesService.storeInCache(price as TokenPriceTimeModel)
+            try{
+                const price = await this.websocketsService.sendMessage(port, "price_latest", token)
+                if (price){
+                    this.pricesService.storeInCache(price as TokenPriceTimeModel)
+                }
+            }catch(error){
+                // TODO: handle multiple timeouts
             }
         }
     }
@@ -107,16 +113,16 @@ export class TradingService implements OnApplicationBootstrap
     {
         const ids = this.signalsService.getAllSignals()
         for(const id of ids){
+            const port = this.signalsService.getSignalPort(id)
             for(const token of this.signalsService.getSignalTokens(id)){
-
-                const port = this.signalsService.getSignalPort(id)
-                const tokens = this.signalsService.getSignalTokens(id)
-                    
-                for(const token of tokens){
+                try{
                     const signal = await this.websocketsService.sendMessage(port, "signal_latest", token)
+                    console.log('got signal: ', signal)
                     if (signal){
                         this.signalsService.storeInCache(id, signal as SignalModel)
                     }
+                }catch(error){
+                    // TODO: handle multiple timeouts
                 }
             }
         }
@@ -134,7 +140,7 @@ export class TradingService implements OnApplicationBootstrap
     {
         if (setup.status === TradingSetupStatusType.TERMINATED){ return }
 
-        const tokenPair = setup.config.tokenPair
+        const tokenPair = TradingSetupConfigModelUtils.GetTokenPair(setup.config)
 
         const price = this.pricesService.getFromCache(tokenPair)
 
@@ -165,7 +171,7 @@ export class TradingService implements OnApplicationBootstrap
                 if (action === 0){
                     const signalActions = []
                     for(const signalIdentifier of tradingSetup.config.signals){
-                        const signal = this.signalsService.getFromCache(signalIdentifier, tradingSetup.config.tokenPair)
+                        const signal = this.signalsService.getFromCache(signalIdentifier, TradingSetupConfigModelUtils.GetTokenPair(tradingSetup.config))
                         const signalAction = TradingSetupModelUtils.UpdateSignal(tradingSetup, signal)
                         signalActions.push(signalAction)
                     }

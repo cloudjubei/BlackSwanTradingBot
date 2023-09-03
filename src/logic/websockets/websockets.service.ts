@@ -31,7 +31,7 @@ export class WebsocketsService
     {
         const socket = this.sockets[port]
         if (socket){
-            return await socket.emitWithAck(type, message)
+            return await socket.timeout(100).emitWithAck(type, message)
         }
     }
 }

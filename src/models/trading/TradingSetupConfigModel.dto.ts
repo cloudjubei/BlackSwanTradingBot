@@ -3,7 +3,8 @@ import TradingStopLossConfigModel from './stoploss/TradingStopLossConfigModel.dt
 
 export default class TradingSetupConfigModel
 {
-    tokenPair: string
+    tokenFirst: string
+    tokenSecond: string
     updateInterval: string
 
     terminationPercentageLoss?: number = undefined
@@ -11,4 +12,13 @@ export default class TradingSetupConfigModel
     stopLoss?: TradingStopLossConfigModel = undefined
 
     signals: string[] = []
+    useLimitOrders: boolean = false
+}
+
+export class TradingSetupConfigModelUtils
+{
+    static GetTokenPair(m: TradingSetupConfigModel) : string
+    {
+        return m.tokenFirst + m.tokenSecond
+    }
 }

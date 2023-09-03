@@ -2,10 +2,13 @@
     {
         "id": "test1",
         "config": {
-            "tokenPair": "BTCTUSD",
+            "tokenFirst": "BTC",
+            "tokenSecond": "TUSD",
             "updateInterval": "1s",
 
-            "signals": ["test"]
+            "signals": ["test", "linear-regression"],
+
+            "useLimitOrders": false
         },
         "startingFirstAmount": "0",
         "startingSecondAmount": "1000",
