@@ -30,6 +30,7 @@ export default class TradingSetupModel
     @ApiProperty() tradeHighestPriceAmount: string = "0"
 
     @ApiProperty() transactions: TradingTransactionModel[] = []
+    @ApiProperty() openTransactions: { [id: string] : TradingTransactionModel } = {}
 }
 
 export class TradingSetupModelUtils
@@ -55,11 +56,24 @@ export class TradingSetupModelUtils
     
     static UpdateTransaction(t: TradingSetupModel, transaction: TradingTransactionModel) : TradingSetupModel
     {
-        t.transactions.push(transaction)
-        t.tradeEntryPriceAmount = t.currentPriceAmount
-        t.tradeLowestPriceAmount = t.currentPriceAmount
-        t.tradeHighestPriceAmount = t.currentPriceAmount
-
+        if (transaction.complete){
+            delete t.openTransactions[transaction.transactionId]
+            t.transactions.push(transaction)
+            t.tradeEntryPriceAmount = t.currentPriceAmount
+            t.tradeLowestPriceAmount = t.currentPriceAmount
+            t.tradeHighestPriceAmount = t.currentPriceAmount
+    
+            if (transaction.buy){
+                t.firstAmount = MathUtils.AddNumbers(t.firstAmount, transaction.firstAmount)
+                t.secondAmount = MathUtils.SubtractNumbers(t.secondAmount, transaction.secondAmount)
+            }else{
+                t.firstAmount = MathUtils.SubtractNumbers(t.firstAmount, transaction.firstAmount)
+                t.secondAmount = MathUtils.AddNumbers(t.secondAmount, transaction.secondAmount)
+            }
+            console.log('UpdateTransaction t.firstAmount: ', t.firstAmount, ' t.secondAmount: ', t.secondAmount, ' avgPrice: ', transaction.priceAmount, ' vs currentPrice: ', t.currentPriceAmount)
+        }else{
+            t.openTransactions[transaction.transactionId] = transaction
+        }
         return t
     }
 

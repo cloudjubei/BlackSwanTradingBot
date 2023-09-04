@@ -10,6 +10,7 @@ import TokenPriceTimeModel from 'src/models/prices/TokenPriceTimeModel.dto'
 import SignalModel from 'src/models/signals/SignalModel.dto'
 import { WebsocketsService } from '../websockets/websockets.service'
 import { TradingSetupConfigModelUtils } from 'src/models/trading/TradingSetupConfigModel.dto'
+import MathUtils from 'src/lib/mathUtils'
 
 @Injectable()
 export class TradingService implements OnApplicationBootstrap
@@ -54,7 +55,7 @@ export class TradingService implements OnApplicationBootstrap
 
         console.log(`TradingService setup ${Date.now()}`)
 
-        this.transactionService.setup()
+        await this.transactionService.setup()
         this.setupWebsocketConnections()
 
         this.hasSetup = true
@@ -117,7 +118,6 @@ export class TradingService implements OnApplicationBootstrap
             for(const token of this.signalsService.getSignalTokens(id)){
                 try{
                     const signal = await this.websocketsService.sendMessage(port, "signal_latest", token)
-                    console.log('got signal: ', signal)
                     if (signal){
                         this.signalsService.storeInCache(id, signal as SignalModel)
                     }
@@ -140,24 +140,46 @@ export class TradingService implements OnApplicationBootstrap
     {
         if (setup.status === TradingSetupStatusType.TERMINATED){ return }
 
-        const tokenPair = TradingSetupConfigModelUtils.GetTokenPair(setup.config)
+        this.updatePrice(setup)
+        this.updateOpenTransactions(setup)
+        this.attemptAction(setup)
+        this.tradingSetupsService.save(setup)
+    }
 
+    private async updatePrice(setup: TradingSetupModel) : Promise<void>
+    {
+        const tokenPair = TradingSetupConfigModelUtils.GetTokenPair(setup.config)
         const price = this.pricesService.getFromCache(tokenPair)
 
         if (price){
             const priceAmount = price.price
             TradingSetupModelUtils.UpdatePrice(setup, priceAmount)
+        }
+    }
 
-            const action = this.updateAction(setup)
-            
-            if (action !== 0){
-                const transaction = await this.transactionService.makeTransaction(setup, action)
-                if (transaction){
-                    TradingSetupModelUtils.UpdateTransaction(setup, transaction)
-                }
+    private async updateOpenTransactions(setup: TradingSetupModel) : Promise<void>
+    {
+        const openTransactions = Object.values(setup.openTransactions)
+        for(const t of openTransactions){
+            const newT = await this.transactionService.updateTransaction(setup, t)
+            if (newT){
+                TradingSetupModelUtils.UpdateTransaction(setup, newT)
             }
+        }
+    }
 
-            this.tradingSetupsService.save(setup)
+    private async attemptAction(setup: TradingSetupModel) : Promise<void>
+    {
+        if (!MathUtils.IsBiggerThanZero(setup.currentPriceAmount)){ return }
+        if (Object.keys(setup.openTransactions).length > 0) { return }
+
+        const action = this.updateAction(setup)
+            
+        if (action !== 0){
+            const transaction = await this.transactionService.makeTransaction(setup, action)
+            if (transaction){
+                TradingSetupModelUtils.UpdateTransaction(setup, transaction)
+            }
         }
     }
 

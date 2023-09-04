@@ -33,20 +33,42 @@ export class BinanceTransactionModelUtils
     {
         const fullAmount = response['executedQty']
         let price = '0'
-        for (const fill of response['fills']){
+        const fills = response['fills'] ?? []
+        for (const fill of fills){
             const percentAmount = MathUtils.DivideNumbers(fill['qty'], fullAmount)
             price = MathUtils.AddNumbers(price, MathUtils.MultiplyNumbers(percentAmount, fill['price']))
         }
-        return new BinanceTransactionModel(response['orderId'], firstToken, secondToken, response['executedQty'], response['cummulativeQuoteQty'], price, response['transactTime'], response['status'], response['side'] === 'BUY')
+        return new BinanceTransactionModel('' + response['orderId'], firstToken, secondToken, response['executedQty'], response['cummulativeQuoteQty'], price, response['transactTime'], response['status'], response['side'] === 'BUY')
     }
 
-    static ToTradingTransaction(m: BinanceTransactionModel) : TradingTransactionModel
+    static ToTradingTransaction(m: BinanceTransactionModel, augmentingTransaction: TradingTransactionModel = undefined) : TradingTransactionModel
     {
         return {
             buy: m.buy,
-            boughtAmount: m.firstAmount,
+            firstToken: m.firstToken,
+            secondToken: m.secondToken,
+            firstAmount: m.firstAmount,
+            secondAmount: m.secondAmount,
             priceAmount: m.price,
-            boughtForAmount: m.secondAmount
+            transactionId: m.id,
+            complete: BinanceTransactionModelUtils.IsCompleted(m),
+            firstUpdateTimestamp: augmentingTransaction?.firstUpdateTimestamp ?? Date.now(),
+            lastUpdateTimestamp: Date.now(),
+            checks: (augmentingTransaction?.checks ?? -1) + 1
         }
+    }
+    static IsCompleted(m: BinanceTransactionModel) : boolean
+    {
+        return BinanceTransactionModelUtils.IsCanceled(m) || BinanceTransactionModelUtils.IsFilled(m)
+    }
+    
+    static IsFilled(m: BinanceTransactionModel) : boolean
+    {
+        return m.status === 'FILLED'
+    }
+    
+    static IsCanceled(m: BinanceTransactionModel) : boolean
+    {
+        return m.status === 'CANCELED'
     }
 }

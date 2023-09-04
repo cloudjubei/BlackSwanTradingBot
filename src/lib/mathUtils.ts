@@ -2,10 +2,10 @@ import BigNumber from "bignumber.js"
 
 export default class MathUtils
 {
-    static Shorten(val1: string) : string
+    static Shorten(val1: string, decimalPlaces: number = 2) : string
     {
         const n = new BigNumber(val1)
-        return n.decimalPlaces(2).toString()
+        return n.decimalPlaces(decimalPlaces).toString()
     }
 
     static Abs(val1: string) : string

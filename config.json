@@ -1,4 +1,9 @@
 {
+    "minimum_amounts": {
+        "BTC": "0.001",
+        "BUSD": "10.0",
+        "TUSD": "10.0"
+    },
     "prices": {
         "BTCBUSD": 3002,
         "BTCTUSD": 3002

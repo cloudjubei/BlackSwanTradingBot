@@ -2,13 +2,19 @@
     {
         "id": "test1",
         "config": {
-            "tokenFirst": "BTC",
-            "tokenSecond": "TUSD",
+            "firstToken": "BTC",
+            "secondToken": "BUSD",
             "updateInterval": "1s",
 
             "signals": ["test", "linear-regression"],
+            "signalThreshold": 0.1,
 
-            "useLimitOrders": false
+            "useLimitOrders": true,
+            "limitOrderBuyOffset": 0.001,
+            "limitOrderSellOffset": 0.001,
+            "limitOrderCancelDueToChecksElapsed": 10000,
+            "limitOrderCancelDueToTimeElapsed": 60,
+            "limitOrderCancelDueToPriceDivergence": "50"
         },
         "startingFirstAmount": "0",
         "startingSecondAmount": "1000",
@@ -24,6 +30,7 @@
         "tradeLowestPriceAmount": "99999999999",
         "tradeHighestPriceAmount": "0",
 
-        "transactions": []
+        "transactions": [],
+        "openTransactions": {}
     }
 ]
