@@ -6,7 +6,7 @@
             "secondToken": "BUSD",
             "updateInterval": "1s",
 
-            "signals": ["test", "linear-regression"],
+            "signals": ["linear-regression"],
             "signalThreshold": 0.1,
 
             "useLimitOrders": true,
