@@ -9,10 +9,6 @@
         "BTCTUSD": 3002
     },
     "signals" : {
-        "test": {
-            "port": 3003,
-            "tokens": ["BTCBUSD", "BTCTUSD"]
-        },
         "linear-regression": {
             "port": 3005,
             "tokens": ["BTCBUSD", "BTCTUSD"]
