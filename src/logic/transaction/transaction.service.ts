@@ -24,6 +24,10 @@ export class TransactionService
         for(const token in config.minimum_amounts){
             this.MINIMUM_AMOUNTS[token] = config.minimum_amounts[token]
         }
+        for(const token of Object.keys(config.minimum_amounts)){
+            this.wallet_free[token] = '0'
+            this.wallet_locked[token] = '0'
+        }
     }
 
     async setup()
@@ -109,6 +113,7 @@ export class TransactionService
         if (setup.config.useLimitOrders){
             const price = this.getLimitPrice(setup, buy)
             const quantity = this.getLimitQuantity(amount, price, buy)
+            console.log("makeTrade makeLimitTransaction price: " + price + " quantity: " + quantity + " for setup id: " + setup.id)
             response = await this.makeLimitTransaction(TradingSetupConfigModelUtils.GetTokenPair(setup.config), quantity, price, buy)
         }else{
             response = await this.makeMarketTransaction(TradingSetupConfigModelUtils.GetTokenPair(setup.config), amount, buy)
@@ -181,9 +186,13 @@ export class TransactionService
     private setupWallet(balances: Array<any>)
     {
         for (const b of balances){
-            this.wallet_free[b['asset']] = b['free']
-            this.wallet_locked[b['asset']] = b['locked']
+            const token = b['asset']
+            if (this.wallet_free[token] !== undefined){
+                this.wallet_free[token] = b['free']
+                this.wallet_locked[token] = b['locked']
+            }
         }
+        console.log("this.wallet_free: ", this.wallet_free)
 
         this.client.getOpenOrders().then(orders => {
             const symbols = ArrayUtils.FilterUnique(orders.map(o => o.symbol))
@@ -234,5 +243,6 @@ export class TransactionService
             this.wallet_free[transaction.firstToken] = MathUtils.SubtractNumbers(this.wallet_free[transaction.firstToken], transaction.firstAmount)
             this.wallet_free[transaction.secondToken] = MathUtils.AddNumbers(this.wallet_free[transaction.secondToken], transaction.secondAmount)
         }
+        console.log("this.wallet_free: ", this.wallet_free)
     }
 }
