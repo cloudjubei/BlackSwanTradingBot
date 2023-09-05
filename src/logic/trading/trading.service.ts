@@ -118,7 +118,6 @@ export class TradingService implements OnApplicationBootstrap
             for(const token of this.signalsService.getSignalTokens(id)){
                 try{
                     const signal = await this.websocketsService.sendMessage(port, "signal_latest", token)
-                    console.log("GOT signal_latest port: " + port + " token: " + token + "  signal: " + signal?.action)
                     if (signal){
                         this.signalsService.storeInCache(id, signal as SignalModel)
                     }
@@ -172,13 +171,11 @@ export class TradingService implements OnApplicationBootstrap
 
     private async attemptAction(setup: TradingSetupModel) : Promise<void>
     {
-        console.log("attemptAction setup: " + setup.id + " currentPrice: " + setup.currentPriceAmount + " open orders: " + Object.keys(setup.openTransactions).length)
         if (!MathUtils.IsBiggerThanZero(setup.currentPriceAmount)){ return }
         if (Object.keys(setup.openTransactions).length > 0) { return }
 
         const action = this.updateAction(setup)
-        console.log("attemptAction last action: ", action)
-           
+            
         if (action !== 0){
             const transaction = await this.transactionService.makeTransaction(setup, action)
             if (transaction){
@@ -201,7 +198,6 @@ export class TradingService implements OnApplicationBootstrap
                         const signalAction = TradingSetupModelUtils.UpdateSignal(tradingSetup, signal)
                         signalActions.push(signalAction)
                     }
-                    console.log("updateAction signalActions: ", signalActions)
                     action = TradingSetupModelUtils.UpdateSignalActions(tradingSetup, signalActions)
                 }
             }
