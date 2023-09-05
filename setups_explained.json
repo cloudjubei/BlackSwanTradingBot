@@ -1,0 +1,48 @@
+[
+    {
+        "id": "testX",
+        "config": {
+            "firstToken": "BTC",
+            "secondToken": "TUSD",
+            "updateInterval": "1s",
+
+            "signals": ["linear-regression"],
+            "signalThreshold": 0.1,
+
+            "useLimitOrders": true,
+            "limitOrderBuyOffset": 0.001,
+            "limitOrderSellOffset": 0.001,
+            "limitOrderCancelDueToChecksElapsed": 10000,
+            "limitOrderCancelDueToTimeElapsed": 60,
+            "limitOrderCancelDueToPriceDivergence": "50",
+
+            "terminationPercentageLoss": 0.1, // IF TOTAL SETUP AMOUNT FALLS BELOW BY THIS PERCENTAGE - TERMINATE
+            "takeProfit": { // optional
+                "percentage": 0.01, // IF CURRENT TRADE EXCEEDS PRE-TRADE AMOUNT BY THIS PERCENTAGE - SELL
+                "trailingStop": { // optional - stops normal take profit from taking effect and activates at "percentage" amount
+                    "deltaPercentage": 0.005, // IF CURRENT AMOUNT FALLS BELOW HIGHEST AMOUNT SEEN since takeProfit.percentage - SELL
+                    "hardLimitPercentage": 0.1 // optional - does the same as takeProfit.percentage did before
+                }
+            },
+            "stopLoss": { // optional
+                "percentage": 0.01 // IF CURRENT TRADE GOES BELOW PRE-TRADE AMOUNT BY THIS PERCENTAGE - SELL
+            }
+        },
+        "startingFirstAmount": "0",
+        "startingSecondAmount": "1000",
+        "firstAmount": "0",
+        "secondAmount": "1000",
+        "lastUpdate": 0,
+
+        "currentPriceAmount": "0",
+        "lowestPriceAmount": "99999999999",
+        "highestPriceAmount": "0",
+
+        "tradeEntryPriceAmount": "0",
+        "tradeLowestPriceAmount": "99999999999",
+        "tradeHighestPriceAmount": "0",
+
+        "transactions": [],
+        "openTransactions": {}
+    }
+]
