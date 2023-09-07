@@ -157,7 +157,7 @@ export class TransactionService
     {
         let parameters = {
             symbol: tokenPair,
-            type: 'LIMIT',
+            type: 'LIMIT_MAKER',
             side: buy ? 'BUY' : 'SELL',
             quantity: Number(quantity),
             price: Number(price),
