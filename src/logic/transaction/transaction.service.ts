@@ -144,8 +144,8 @@ export class TransactionService
     }
     private getLimitPrice(setup: TradingSetupModel, buy: boolean) : string
     {
-        const multiplier = buy ? ("" + setup.config.limitOrderBuyOffset) : ("-" + setup.config.limitOrderSellOffset)
-        const price = MathUtils.MultiplyNumbers(setup.currentPriceAmount, MathUtils.AddNumbers("1", multiplier))
+        const multiplier = buy ? MathUtils.AddNumbers("1", ("" + setup.config.limitOrderBuyOffset)) : MathUtils.SubtractNumbers("1", ("" + setup.config.limitOrderSellOffset))
+        const price = MathUtils.MultiplyNumbers(setup.currentPriceAmount, multiplier)
         return MathUtils.Shorten(price, 2)
     }
     private getLimitQuantity(amount: string, price: string, buy: boolean) : string

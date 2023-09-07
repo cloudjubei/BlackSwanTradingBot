@@ -10,8 +10,8 @@
             "signalThreshold": 0.1,
 
             "useLimitOrders": true,
-            "limitOrderBuyOffset": 0.001,
-            "limitOrderSellOffset": 0.001,
+            "limitOrderBuyOffset": -0.001,
+            "limitOrderSellOffset": -0.001,
             "limitOrderCancelDueToChecksElapsed": 10000,
             "limitOrderCancelDueToTimeElapsed": 60,
             "limitOrderCancelDueToPriceDivergence": "50"
