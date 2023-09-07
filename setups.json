@@ -3,10 +3,10 @@
         "id": "test1",
         "config": {
             "firstToken": "BTC",
-            "secondToken": "BUSD",
+            "secondToken": "TUSD",
             "updateInterval": "1s",
 
-            "signals": ["linear-regression"],
+            "signals": ["manual"],
             "signalThreshold": 0.1,
 
             "useLimitOrders": true,

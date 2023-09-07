@@ -5,13 +5,12 @@
         "TUSD": "10.0"
     },
     "prices": {
-        "BTCBUSD": 3002,
         "BTCTUSD": 3002
     },
     "signals" : {
-        "linear-regression": {
-            "port": 3005,
-            "tokens": ["BTCBUSD", "BTCTUSD"]
+        "manual": {
+            "port": 3003,
+            "tokens": ["BTCTUSD"]
         }
     }
 }
