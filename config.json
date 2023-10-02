@@ -1,16 +1,15 @@
 {
     "minimum_amounts": {
         "BTC": "0.001",
-        "BUSD": "10.0",
-        "TUSD": "10.0"
+        "USDT": "10.0"
     },
     "prices": {
-        "BTCTUSD": 3002
+        "BTCUSDT": 3002
     },
     "signals" : {
         "manual": {
             "port": 3003,
-            "tokens": ["BTCTUSD"]
+            "tokens": ["BTCUSDT"]
         }
     }
 }

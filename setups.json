@@ -3,7 +3,7 @@
         "id": "test1",
         "config": {
             "firstToken": "BTC",
-            "secondToken": "TUSD",
+            "secondToken": "USDT",
             "updateInterval": "1s",
 
             "signals": ["manual"],

@@ -3,7 +3,7 @@
         "id": "testX",
         "config": {
             "firstToken": "BTC",
-            "secondToken": "TUSD",
+            "secondToken": "USDT",
             "updateInterval": "1s",
 
             "signals": ["linear-regression"],
