@@ -1,62 +1,64 @@
 import { Injectable } from '@nestjs/common'
-import ArrayUtils from 'src/lib/arrayUtils'
-import { getFile } from 'src/lib/storageUtils'
-import ConfigModel from 'src/models/config/ConfigModel.dto'
-import TokenPriceTimeModel from 'src/models/prices/TokenPriceTimeModel.dto'
+import ArrayUtils from "commons/lib/arrayUtils"
+import PriceModel from "commons/models/price/PriceModel.dto"
+import PriceCache from 'commons/models/cache/PriceCache'
+import { IdentityService } from 'logic/identity/identity.service'
+import ConfigPriceInputModel from 'commons/models/config/ConfigPriceInputModel.dto'
 
 @Injectable()
 export class PricesService
 {
-    private ports: { [key: string]: number } = {}
-    private cache: { [key: string]: TokenPriceTimeModel } = {}
+    private urls: { [key: string]: string } = {}
+    private cache = new PriceCache()
 
-    constructor()
+    constructor(
+        private readonly identityService: IdentityService,
+    )
     {
-        const configFile = getFile('config.json')
-        const config = JSON.parse(configFile) as ConfigModel
-        for(const token in config.prices){
-            this.add(token, config.prices[token])
+        const config = this.identityService.config
+        for(const token of Object.keys(config.prices)){
+            this.add(token, config.intervals, config.prices[token])
         }
     }
 
-    storeInCache(price: TokenPriceTimeModel)
+    storeInCache(price: PriceModel)
     {
-        this.cache[price.tokenPair] = price
+        this.cache.storePrice(price)
     }
-    getFromCache(token: string) : TokenPriceTimeModel
+    getFromCache(token: string, interval: string) : PriceModel
     {
-        return this.cache[token]
+        return this.cache.getLatest(token, interval)
     }
   
     getAllTokens() : string[]
     {
-        return Object.keys(this.ports)
+        return Object.keys(this.urls)
     }
-    getAllPorts() : number[]
+    getAllUrls() : string[]
     {
-        return ArrayUtils.FilterUnique(Object.values(this.ports))
+        return ArrayUtils.FilterUnique(Object.values(this.urls))
     }
 
     hasToken(token: string) : boolean
     {
-        return this.ports[token] !== undefined
+        return this.urls[token] !== undefined
     }
-    getPort(token: string) : number | undefined
+    getUrl(token: string) : string | undefined
     {
-        return this.ports[token]
-    }
-
-    add(token: string, port: number)
-    {
-        this.ports[token] = port
-        this.cache[token] = new TokenPriceTimeModel(token, '0', 0)
+        return this.urls[token]
     }
 
-    remove(token: string) : number
+    add(token: string, intervals: string[], config: ConfigPriceInputModel)
     {
-        const port = this.ports[token]
+        this.urls[token] = config.host + ':' + config.port
+        this.cache.setup([token], intervals, 100)
+    }
+
+    remove(token: string) : string
+    {
+        const url = this.urls[token]
         delete this.cache[token]
-        delete this.ports[token]
-        return port
+        delete this.urls[token]
+        return url
     }
 }

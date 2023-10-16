@@ -4,10 +4,8 @@
         "config": {
             "firstToken": "BTC",
             "secondToken": "USDT",
-            "updateInterval": "1s",
-
-            "signals": ["manual"],
-            "signalThreshold": 0.1,
+            "interval": "1s",
+            "signal": "manual",
 
             "useLimitOrders": true,
             "limitOrderBuyOffset": -0.001,

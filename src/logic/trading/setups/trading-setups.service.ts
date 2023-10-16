@@ -1,45 +1,48 @@
 import { Injectable } from '@nestjs/common'
-import { createOrWriteToFile, getFile } from 'src/lib/storageUtils'
-import TradingSetupConfigModel from 'src/models/trading/TradingSetupConfigModel.dto'
-import TradingSetupModel from 'src/models/trading/TradingSetupModel.dto'
+import TradingSetupConfigModel from 'models/trading/TradingSetupConfigModel.dto'
+import TradingSetupModel from 'models/trading/TradingSetupModel.dto'
+import StorageUtils from "commons/lib/storageUtils"
 
 @Injectable()
 export class TradingSetupsService
 {
-    private cache: { [key: string]: TradingSetupModel } = {}
+    private setups: { [key: string]: TradingSetupModel } = {}
 
     constructor()
     {
-        const setupsFile = getFile('setups.json')
+        const setupsFile = StorageUtils.getFile('setups.json')
         const setups = JSON.parse(setupsFile) as TradingSetupModel[]
         for(const setup of setups){
-            this.cache[setup.id] = setup
+            this.setups[setup.id] = setup
         }
     }
   
     getAll() : TradingSetupModel[]
     {
-        return Object.values(this.cache)
+        return Object.values(this.setups)
     }
 
     get(id: string) : TradingSetupModel | undefined
     {
-        return this.cache[id]
+        return this.setups[id]
     }
 
     save(tradingSetup: TradingSetupModel) : TradingSetupModel
     {
-        this.cache[tradingSetup.id] = tradingSetup
+        this.setups[tradingSetup.id] = tradingSetup
+
+        StorageUtils.createOrWriteToFile('/', 'setups.json', JSON.stringify(this.getAll()))
+
         return tradingSetup
     }
 
-    create(config: TradingSetupConfigModel, startingFirstAmount: string, startingSecondAmount: string) : TradingSetupModel
+    create(id: string, config: TradingSetupConfigModel, startingFirstAmount: string, startingSecondAmount: string) : TradingSetupModel
     {
         const template = new TradingSetupModel()
         
         const o = {
             ...template,
-            id: `${Date.now()}`,
+            id,
             config,
             startingFirstAmount,
             startingSecondAmount,
@@ -48,15 +51,18 @@ export class TradingSetupsService
         }
         this.save(o)
 
-        createOrWriteToFile('/', 'setups.json', JSON.stringify(this.getAll()))
+        StorageUtils.createOrWriteToFile('/', 'setups.json', JSON.stringify(this.getAll()))
 
         return o
     }
 
     remove(id: string) : TradingSetupModel | undefined
     {
-        const temp = this.cache[id]
-        delete this.cache[id]
+        const temp = this.setups[id]
+        delete this.setups[id]
+
+        StorageUtils.createOrWriteToFile('/', 'setups.json', JSON.stringify(this.getAll()))
+
         return temp
     }
 }

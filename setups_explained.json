@@ -4,10 +4,9 @@
         "config": {
             "firstToken": "BTC",
             "secondToken": "USDT",
-            "updateInterval": "1s",
+            "interval": "1s",
 
-            "signals": ["linear-regression"],
-            "signalThreshold": 0.1,
+            "signal": "linear-regression",
 
             "useLimitOrders": true,
             "limitOrderBuyOffset": 0.001,

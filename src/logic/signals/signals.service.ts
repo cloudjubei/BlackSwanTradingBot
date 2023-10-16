@@ -1,73 +1,76 @@
 import { Injectable } from '@nestjs/common'
-import { getFile } from 'src/lib/storageUtils'
-import ConfigModel from 'src/models/config/ConfigModel.dto'
-import ConfigSignalModel from 'src/models/config/ConfigSignalModel.dto'
-import SignalModel from 'src/models/signals/SignalModel.dto'
+import SignalCache from 'commons/models/cache/SignalCache'
+import SignalModel from 'commons/models/signal/SignalModel.dto'
+import ConfigSignalInputModel from 'commons/models/config/ConfigSignalInputModel.dto'
+import { IdentityService } from 'logic/identity/identity.service'
 
 @Injectable()
 export class SignalsService
 {
-    private cache: { [id: string]: {[token: string] : SignalModel} } = {}
-    private ports: { [id: string]: number } = {}
+    private caches : { [id:string] : SignalCache } = {}
+    private urls: { [id: string]: string } = {}
 
-    constructor()
+    constructor(
+        private readonly identityService: IdentityService,
+    )
     {
-        const configFile = getFile('config.json')
-        const config = JSON.parse(configFile) as ConfigModel
-        for(const signal in config.signals){
+        const config = this.identityService.config
+        for(const signal of Object.keys(config.signals)){
             this.add(signal, config.signals[signal])
         }
     }
 
     storeInCache(id: string, signal: SignalModel)
     {
-        this.cache[id][signal.tokenPair] = signal
+        this.caches[id]?.storeSignal(signal)
     }
-    getFromCache(id: string, token: string) : SignalModel
+    getFromCache(id: string, tokenPair: string, interval: string) : SignalModel
     {
-        return this.cache[id][token]
+        return this.caches[id]?.getLatest(tokenPair, interval)
     }
   
     getAllSignals() : string[]
     {
-        return Object.keys(this.cache)
+        return Object.keys(this.urls)
     }
-    getAllPorts() : number[]
+    getAllUrls() : string[]
     {
-        return Object.values(this.ports)
+        return Object.values(this.urls)
     }
 
     hasSignal(signal: string) : boolean
     {
-        return this.cache[signal] !== undefined
+        return this.urls[signal] !== undefined
     }
-    getSignalPort(signal: string) : number | undefined
+    getSignalUrl(signal: string) : string | undefined
     {
-        return this.ports[signal]
+        return this.urls[signal]
     }
     getSignalTokens(signal: string) : string[]
     {
-        return Object.keys(this.cache[signal] ?? {})
+        return this.caches[signal]?.getAllKeys() ?? []
+    }
+    getSignalIntervals(signal: string, token: string) : string[]
+    {
+        return this.caches[signal]?.getAllInternalKeys(token) ?? []
     }
 
-    hasPort(port: number) : boolean
+    hasUrl(url: string) : boolean
     {
-        return this.getAllPorts().find(p => p === port) !== undefined
+        return this.getAllUrls().find(p => p === url) !== undefined
     }
 
-    add(id: string, config: ConfigSignalModel)
+    add(id: string, config: ConfigSignalInputModel)
     {
-        this.ports[id] = config.port
-        this.cache[id] = {}
-        
-        for(const token of config.tokens){
-            this.cache[id][token] = new SignalModel(token, 0, 0)
-        }
+        this.urls[id] = config.host + ':' + config.port
+        this.caches[id] = new SignalCache()
+
+        this.caches[id].setup(config.tokens, config.intervals, 100)
     }
 
     removeSignal(signal: string)
     {
-        delete this.cache[signal]
-        delete this.ports[signal]
+        delete this.caches[signal]
+        delete this.urls[signal]
     }
 }

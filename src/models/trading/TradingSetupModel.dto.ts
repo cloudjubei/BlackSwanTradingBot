@@ -2,10 +2,10 @@ import { Prop, Schema, raw } from '@nestjs/mongoose'
 import { ApiHideProperty, ApiProperty } from "@nestjs/swagger"
 import TradingSetupConfigModel from './TradingSetupConfigModel.dto'
 import TradingTransactionModel from './transaction/TradingTransactionModel.dto'
-import MathUtils from 'src/lib/mathUtils'
-import { Timestamp } from '../swagger.consts'
 import TradingSetupStatusType, { TradingSetupStatusTypeAPI } from './TradingSetupStatusType.dto'
-import SignalModel from '../signals/SignalModel.dto'
+import MathUtils from "commons/lib/mathUtils"
+import SignalModel from "commons/models/signal/SignalModel.dto"
+import { Timestamp } from "commons/models/swagger.consts"
 
 export default class TradingSetupModel
 {
@@ -145,14 +145,5 @@ export class TradingSetupModelUtils
     static UpdateSignal(t: TradingSetupModel, signal: SignalModel) : number
     {
         return signal.action * signal.certainty
-    }
-
-    static UpdateSignalActions(t: TradingSetupModel, signalActions: number[]) : number
-    {
-        let action = 0
-        for(const a of signalActions){
-            action += a
-        }
-        return action / signalActions.length
     }
 }

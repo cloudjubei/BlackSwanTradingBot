@@ -1,0 +1,22 @@
+import { Controller, Get, Param, Req, UseGuards, Post, Body, Query, Delete } from '@nestjs/common'
+import { ApiQuery, ApiTags } from "@nestjs/swagger"
+import { TransactionService } from './transaction.service'
+
+@ApiTags("transaction")
+@Controller("transactions")
+export class TransactionController
+{
+    constructor(private readonly transactionService: TransactionService) {}
+
+    @Get('wallet/free')
+    async getWalletFree() : Promise<{ [token: string] : string }>
+    {
+        return await this.transactionService.getWalletFree()
+    }
+
+    @Get('wallet/locked')
+    async getWalletLocked() : Promise<{ [token: string] : string }>
+    {
+        return await this.transactionService.getWalletLocked()
+    }
+}

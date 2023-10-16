@@ -5,14 +5,12 @@ export default class TradingSetupConfigModel
 {
     firstToken: string
     secondToken: string
-    updateInterval: string
+    interval: string
+    signal: string
 
     terminationPercentageLoss?: number = undefined
     takeProfit?: TradingTakeProfitConfigModel = undefined
     stopLoss?: TradingStopLossConfigModel = undefined
-
-    signals: string[] = []
-    signalThreshold: number = 0
 
     useLimitOrders: boolean = false
     limitOrderBuyOffset: number = 0

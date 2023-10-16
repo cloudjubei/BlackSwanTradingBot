@@ -20,20 +20,20 @@ export class PricesController
         return await this.pricesService.getAllPorts()
     }
 
-    @Post(':token/:port')
-    async add(@Param() token: string, @Param() port: number) : Promise<void>
+    @Post(':port/:token/:intervals')
+    async add(@Param('port') port: number, @Param('token') token: string, @Param('intervals') intervals: string[]) : Promise<void>
     {
-        return await this.pricesService.add(token, port)
+        return await this.pricesService.add(token, intervals, port)
     }
 
     @Get(':token')
-    async getPort(@Param() token: string) : Promise<number | undefined>
+    async getPort(@Param('token') token: string) : Promise<number | undefined>
     {
         return await this.pricesService.getPort(token)
     }
 
     @Delete(':token')
-    async remove(@Param() token: string) : Promise<number | undefined>
+    async remove(@Param('token') token: string) : Promise<number | undefined>
     {
         return await this.pricesService.remove(token)
     }

@@ -1,13 +1,12 @@
 import { Injectable } from '@nestjs/common'
-import MathUtils from 'src/lib/mathUtils'
-import TradingSetupModel from 'src/models/trading/TradingSetupModel.dto'
-import TradingTransactionModel, { TradingTransactionModelUtils } from 'src/models/trading/transaction/TradingTransactionModel.dto'
+import TradingSetupModel from 'models/trading/TradingSetupModel.dto'
+import TradingTransactionModel, { TradingTransactionModelUtils } from 'models/trading/transaction/TradingTransactionModel.dto'
 import { MainClient, NewSpotOrderParams } from 'binance'
-import { TradingSetupConfigModelUtils } from 'src/models/trading/TradingSetupConfigModel.dto'
-import BinanceTransactionModel, { BinanceTransactionModelUtils } from 'src/models/trading/transaction/BinanceTransactionModel.dto'
-import ArrayUtils from 'src/lib/arrayUtils'
-import { getFile } from 'src/lib/storageUtils'
-import ConfigModel from 'src/models/config/ConfigModel.dto'
+import { TradingSetupConfigModelUtils } from 'models/trading/TradingSetupConfigModel.dto'
+import BinanceTransactionModel, { BinanceTransactionModelUtils } from 'models/trading/transaction/BinanceTransactionModel.dto'
+import MathUtils from "commons/lib/mathUtils"
+import ArrayUtils from "commons/lib/arrayUtils"
+import { IdentityService } from 'logic/identity/identity.service'
 
 @Injectable()
 export class TransactionService
@@ -15,19 +14,25 @@ export class TransactionService
     private client : MainClient
     private wallet_free = {}
     private wallet_locked = {}
-    private MINIMUM_AMOUNTS = {}
 
-    constructor()
+    constructor(
+        private readonly identityService: IdentityService,
+    )
     {
-        const configFile = getFile('config.json')
-        const config = JSON.parse(configFile) as ConfigModel
-        for(const token in config.minimum_amounts){
-            this.MINIMUM_AMOUNTS[token] = config.minimum_amounts[token]
-        }
+        const config = this.identityService.config
         for(const token of Object.keys(config.minimum_amounts)){
             this.wallet_free[token] = '0'
             this.wallet_locked[token] = '0'
         }
+    }
+
+    getWalletFree() : { [token: string] : string }
+    {
+        return this.wallet_free
+    }
+    getWalletLocked() : { [token: string] : string }
+    {
+        return this.wallet_locked
     }
 
     async setup()
@@ -82,7 +87,6 @@ export class TransactionService
     {
         console.log("makeTransaction for action: " + action + " and setup id: ", setup.id)
         if (action == 0) { return }
-        if (Math.abs(action) < setup.config.signalThreshold) { return }
 
         const buy = action > 0 // action < 0 == SELL
         const tradeAmount = this.getTradeAmount(setup, buy)
@@ -98,10 +102,10 @@ export class TransactionService
         let tradeAmount = '0'
         if (buy){
             walletAmount = this.wallet_free[setup.config.secondToken] ?? '0'
-            tradeAmount =  MathUtils.IsGreaterThanOrEqualTo(setup.secondAmount, this.MINIMUM_AMOUNTS[setup.config.secondToken]) ? setup.secondAmount : '0' 
+            tradeAmount =  MathUtils.IsGreaterThanOrEqualTo(setup.secondAmount, this.identityService.getMinAmounts()[setup.config.secondToken]) ? setup.secondAmount : '0' 
         }else{
             walletAmount = this.wallet_free[setup.config.firstToken] ?? '0'
-            tradeAmount =  MathUtils.IsGreaterThanOrEqualTo(setup.firstAmount, this.MINIMUM_AMOUNTS[setup.config.firstToken]) ? setup.firstAmount : '0' 
+            tradeAmount =  MathUtils.IsGreaterThanOrEqualTo(setup.firstAmount, this.identityService.getMinAmounts()[setup.config.firstToken]) ? setup.firstAmount : '0' 
         }
         return MathUtils.Min(walletAmount, tradeAmount)
     }

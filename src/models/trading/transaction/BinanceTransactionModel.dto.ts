@@ -1,5 +1,5 @@
-import MathUtils from "src/lib/mathUtils"
 import TradingTransactionModel from "./TradingTransactionModel.dto"
+import MathUtils from "commons/lib/mathUtils"
 
 export default class BinanceTransactionModel
 {
