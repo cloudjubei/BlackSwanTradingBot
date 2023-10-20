@@ -1,10 +1,10 @@
-import ConfigPriceInputModel from 'commons/models/config/ConfigPriceInputModel.dto'
+import ConfigConnectionInputModel from 'commons/models/config/ConfigConnectionInputModel.dto'
 import ConfigSignalInputModel from 'commons/models/config/ConfigSignalInputModel.dto'
 
 export default class ConfigModel
 {
     minimum_amounts: { [key:string] : string } = {}
-    prices: { [key:string] : ConfigPriceInputModel } = {}
+    prices: { [key:string] : ConfigConnectionInputModel } = {}
     intervals: string[] = []
     signals: { [key:string] : ConfigSignalInputModel } = {}
 }

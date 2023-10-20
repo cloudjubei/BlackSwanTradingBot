@@ -3,7 +3,7 @@ import ArrayUtils from "commons/lib/arrayUtils"
 import PriceModel from "commons/models/price/PriceModel.dto"
 import PriceCache from 'commons/models/cache/PriceCache'
 import { IdentityService } from 'logic/identity/identity.service'
-import ConfigPriceInputModel from 'commons/models/config/ConfigPriceInputModel.dto'
+import ConfigConnectionInputModel, { ConfigConnectionInputModelUtils } from 'commons/models/config/ConfigConnectionInputModel.dto'
 
 @Injectable()
 export class PricesService
@@ -52,9 +52,9 @@ export class PricesService
         return this.urls[token]
     }
 
-    add(token: string, intervals: string[], config: ConfigPriceInputModel)
+    add(token: string, intervals: string[], config: ConfigConnectionInputModel)
     {
-        this.urls[token] = config.host + ':' + config.port
+        this.urls[token] = ConfigConnectionInputModelUtils.GetUrl(config)
         this.cache.setup([token], intervals, 100)
     }
 

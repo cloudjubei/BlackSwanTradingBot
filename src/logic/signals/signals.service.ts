@@ -3,6 +3,7 @@ import SignalCache from 'commons/models/cache/SignalCache'
 import SignalModel from 'commons/models/signal/SignalModel.dto'
 import ConfigSignalInputModel from 'commons/models/config/ConfigSignalInputModel.dto'
 import { IdentityService } from 'logic/identity/identity.service'
+import { ConfigConnectionInputModelUtils } from 'commons/models/config/ConfigConnectionInputModel.dto'
 
 @Injectable()
 export class SignalsService
@@ -66,7 +67,7 @@ export class SignalsService
 
     add(id: string, config: ConfigSignalInputModel)
     {
-        this.urls[id] = config.host + ':' + config.port
+        this.urls[id] = ConfigConnectionInputModelUtils.GetUrl(config)
         this.caches[id] = new SignalCache()
 
         this.caches[id].setup(config.tokens, config.intervals, 100)
