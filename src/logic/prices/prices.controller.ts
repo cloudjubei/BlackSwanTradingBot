@@ -1,7 +1,7 @@
 import { Controller, Get, Param, Req, UseGuards, Post, Body, Query, Delete } from '@nestjs/common'
 import { ApiQuery, ApiTags } from "@nestjs/swagger"
 import { PricesService } from './prices.service'
-import ConfigPriceInputModel from 'commons/models/config/ConfigPriceInputModel.dto'
+import ConfigConnectionInputModel from 'commons/models/config/ConfigConnectionInputModel.dto'
 import PriceModel from 'commons/models/price/PriceModel.dto'
 
 @ApiTags("prices")
@@ -29,7 +29,7 @@ export class PricesController
     }
 
     @Post(':tokenPair/:intervals')
-    async add(@Param('tokenPair') tokenPair: string, @Param('intervals') intervals: string[], @Body() config: ConfigPriceInputModel) : Promise<void>
+    async add(@Param('tokenPair') tokenPair: string, @Param('intervals') intervals: string[], @Body() config: ConfigConnectionInputModel) : Promise<void>
     {
         return await this.pricesService.add(tokenPair, intervals, config)
     }
