@@ -117,7 +117,7 @@ export class TradingService implements OnApplicationBootstrap
             for(const tokenPair of this.signalsService.getSignalTokens(identifier)){
                 for(const interval of this.signalsService.getSignalIntervals(identifier, tokenPair)){
                     try{
-                        const signal = await this.websocketsService.sendMessage(url, "signal_latest", { identifier, tokenPair, interval })
+                        const signal = await this.websocketsService.sendMessage(url, "signal_latest", JSON.stringify({ identifier, tokenPair, interval }))
                         if (signal){
                             this.signalsService.storeInCache(identifier, signal as SignalModel)
                         }

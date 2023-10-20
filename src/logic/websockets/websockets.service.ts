@@ -27,7 +27,7 @@ export class WebsocketsService
         }
     }
 
-    async sendMessage(url: string, type: string, message: any) : Promise<any>
+    async sendMessage(url: string, type: string, message: string) : Promise<any>
     {
         const socket = this.sockets[url]
         if (socket){

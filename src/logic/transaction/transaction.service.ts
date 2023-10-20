@@ -7,13 +7,14 @@ import BinanceTransactionModel, { BinanceTransactionModelUtils } from 'models/tr
 import MathUtils from "commons/lib/mathUtils"
 import ArrayUtils from "commons/lib/arrayUtils"
 import { IdentityService } from 'logic/identity/identity.service'
+import WalletModel from 'models/WalletModel.dto'
 
 @Injectable()
 export class TransactionService
 {
     private client : MainClient
-    private wallet_free = {}
-    private wallet_locked = {}
+    private walletFree = new WalletModel()
+    private walletLocked = new WalletModel()
 
     constructor(
         private readonly identityService: IdentityService,
@@ -21,18 +22,18 @@ export class TransactionService
     {
         const config = this.identityService.config
         for(const token of Object.keys(config.minimum_amounts)){
-            this.wallet_free[token] = '0'
-            this.wallet_locked[token] = '0'
+            this.walletFree.amounts[token] = '0'
+            this.walletLocked.amounts[token] = '0'
         }
     }
 
-    getWalletFree() : { [token: string] : string }
+    getWalletFree() : WalletModel
     {
-        return this.wallet_free
+        return this.walletFree
     }
-    getWalletLocked() : { [token: string] : string }
+    getWalletLocked() : WalletModel
     {
-        return this.wallet_locked
+        return this.walletLocked
     }
 
     async setup()
@@ -101,10 +102,10 @@ export class TransactionService
         let walletAmount = '0'
         let tradeAmount = '0'
         if (buy){
-            walletAmount = this.wallet_free[setup.config.secondToken] ?? '0'
+            walletAmount = this.walletFree.amounts[setup.config.secondToken] ?? '0'
             tradeAmount =  MathUtils.IsGreaterThanOrEqualTo(setup.secondAmount, this.identityService.getMinAmounts()[setup.config.secondToken]) ? setup.secondAmount : '0' 
         }else{
-            walletAmount = this.wallet_free[setup.config.firstToken] ?? '0'
+            walletAmount = this.walletFree.amounts[setup.config.firstToken] ?? '0'
             tradeAmount =  MathUtils.IsGreaterThanOrEqualTo(setup.firstAmount, this.identityService.getMinAmounts()[setup.config.firstToken]) ? setup.firstAmount : '0' 
         }
         return MathUtils.Min(walletAmount, tradeAmount)
@@ -191,12 +192,12 @@ export class TransactionService
     {
         for (const b of balances){
             const token = b['asset']
-            if (this.wallet_free[token] !== undefined){
-                this.wallet_free[token] = b['free']
-                this.wallet_locked[token] = b['locked']
+            if (this.walletFree.amounts[token] !== undefined){
+                this.walletFree.amounts[token] = b['free']
+                this.walletLocked.amounts[token] = b['locked']
             }
         }
-        console.log("this.wallet_free: ", this.wallet_free)
+        console.log("this.wallet_free: ", this.walletFree.amounts)
 
         this.client.getOpenOrders().then(orders => {
             const symbols = ArrayUtils.FilterUnique(orders.map(o => o.symbol))
@@ -241,12 +242,12 @@ export class TransactionService
     {
         if (!BinanceTransactionModelUtils.IsCompleted(transaction)) { return }
         if (transaction.buy){
-            this.wallet_free[transaction.firstToken] = MathUtils.AddNumbers(this.wallet_free[transaction.firstToken], transaction.firstAmount)
-            this.wallet_free[transaction.secondToken] = MathUtils.SubtractNumbers(this.wallet_free[transaction.secondToken], transaction.secondAmount)
+            this.walletFree.amounts[transaction.firstToken] = MathUtils.AddNumbers(this.walletFree.amounts[transaction.firstToken], transaction.firstAmount)
+            this.walletFree.amounts[transaction.secondToken] = MathUtils.SubtractNumbers(this.walletFree.amounts[transaction.secondToken], transaction.secondAmount)
         }else{
-            this.wallet_free[transaction.firstToken] = MathUtils.SubtractNumbers(this.wallet_free[transaction.firstToken], transaction.firstAmount)
-            this.wallet_free[transaction.secondToken] = MathUtils.AddNumbers(this.wallet_free[transaction.secondToken], transaction.secondAmount)
+            this.walletFree.amounts[transaction.firstToken] = MathUtils.SubtractNumbers(this.walletFree.amounts[transaction.firstToken], transaction.firstAmount)
+            this.walletFree.amounts[transaction.secondToken] = MathUtils.AddNumbers(this.walletFree.amounts[transaction.secondToken], transaction.secondAmount)
         }
-        console.log("this.wallet_free: ", this.wallet_free)
+        console.log("this.wallet_free: ", this.walletFree.amounts)
     }
 }

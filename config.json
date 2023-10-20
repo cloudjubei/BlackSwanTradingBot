@@ -22,11 +22,29 @@
         "1d"
     ],
     "signals" : {
-        "bollinger20High": {
-            "host": "http://52.29.230.39",
-            "port": 3005,
-            "tokens": ["BTCFDUSD"],
-            "intervals": ["1s"]
+        "bollingerHighSignal": {
+            "port": 3005
+        },
+        "bollingerLowSignal": {
+            "port": 3005
+        },
+        "rsi30Overbought": {
+            "port": 3005
+        },
+        "rsi30Oversold": {
+            "port": 3005
+        },
+        "rsi9Overbought": {
+            "port": 3005
+        },
+        "rsi9Oversold": {
+            "port": 3005
+        },
+        "bollingerHighWithRSI30Overbought": {
+            "port": 3005
+        },
+        "bollingerLowWithRSI30Oversold": {
+            "port": 3005
         }
     }
 }
