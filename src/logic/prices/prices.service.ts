@@ -29,6 +29,10 @@ export class PricesService
     {
         return this.cache.getLatest(token, interval)
     }
+    getAllFromCache(token: string, interval: string) : PriceModel[]
+    {
+        return this.cache.getAll(token, interval)
+    }
   
     getAllTokens() : string[]
     {

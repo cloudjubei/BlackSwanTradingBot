@@ -2,6 +2,7 @@ import { Controller, Get, Param, Req, UseGuards, Post, Body, Query, Delete } fro
 import { ApiQuery, ApiTags } from "@nestjs/swagger"
 import { SignalsService } from './signals.service'
 import ConfigSignalInputModel from 'commons/models/config/ConfigSignalInputModel.dto'
+import SignalModel from 'commons/models/signal/SignalModel.dto'
 
 @ApiTags("signals")
 @Controller("signals")
@@ -15,28 +16,28 @@ export class SignalsController
         return await this.signalsService.getAllSignals()
     }
 
-    @Get('allPorts')
-    async getAllPorts() : Promise<number[]>
+    @Get(':id/tokens')
+    async getTokens(@Param('id') id: string) : Promise<string[] | undefined>
     {
-        return await this.signalsService.getAllPorts()
+        return await this.signalsService.getSignalTokens(id)
+    }
+
+    @Get(':id/:tokenPair/:interval/latest')
+    async getLatest(@Param('id') id: string, @Param('tokenPair') tokenPair: string, @Param('interval') interval: string) : Promise<SignalModel>
+    {
+        return await this.signalsService.getFromCache(id, tokenPair, interval)
+    }
+
+    @Get(':id/:tokenPair/:interval/all')
+    async getAll(@Param('id') id: string, @Param('tokenPair') tokenPair: string, @Param('interval') interval: string) : Promise<SignalModel[]>
+    {
+        return await this.signalsService.getAllFromCache(id, tokenPair, interval)
     }
 
     @Post(':id')
     async add(@Param('id') id: string, @Body() signalConfig: ConfigSignalInputModel) : Promise<void>
     {
         return await this.signalsService.add(id, signalConfig)
-    }
-
-    @Get(':id/port')
-    async getPort(@Param('id') id: string) : Promise<number | undefined>
-    {
-        return await this.signalsService.getSignalPort(id)
-    }
-
-    @Get(':id/tokens')
-    async getTokens(@Param('id') id: string) : Promise<string[] | undefined>
-    {
-        return await this.signalsService.getSignalTokens(id)
     }
 
     @Delete(':id')

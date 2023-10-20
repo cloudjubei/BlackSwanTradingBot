@@ -1,6 +1,8 @@
 import { Controller, Get, Param, Req, UseGuards, Post, Body, Query, Delete } from '@nestjs/common'
 import { ApiQuery, ApiTags } from "@nestjs/swagger"
 import { PricesService } from './prices.service'
+import ConfigPriceInputModel from 'commons/models/config/ConfigPriceInputModel.dto'
+import PriceModel from 'commons/models/price/PriceModel.dto'
 
 @ApiTags("prices")
 @Controller("prices")
@@ -14,27 +16,27 @@ export class PricesController
         return await this.pricesService.getAllTokens()
     }
 
-    @Get('allPorts')
-    async getAllPorts() : Promise<number[]>
+    @Get(':tokenPair/:interval/latest')
+    async getLatest(@Param('tokenPair') tokenPair: string, @Param('interval') interval: string) : Promise<PriceModel | undefined>
     {
-        return await this.pricesService.getAllPorts()
+        return await this.pricesService.getFromCache(tokenPair, interval)
     }
 
-    @Post(':port/:token/:intervals')
-    async add(@Param('port') port: number, @Param('token') token: string, @Param('intervals') intervals: string[]) : Promise<void>
+    @Get(':tokenPair/:interval/all')
+    async getAll(@Param('tokenPair') tokenPair: string, @Param('interval') interval: string) : Promise<PriceModel[] | undefined>
     {
-        return await this.pricesService.add(token, intervals, port)
+        return await this.pricesService.getAllFromCache(tokenPair, interval)
     }
 
-    @Get(':token')
-    async getPort(@Param('token') token: string) : Promise<number | undefined>
+    @Post(':tokenPair/:intervals')
+    async add(@Param('tokenPair') tokenPair: string, @Param('intervals') intervals: string[], @Body() config: ConfigPriceInputModel) : Promise<void>
     {
-        return await this.pricesService.getPort(token)
+        return await this.pricesService.add(tokenPair, intervals, config)
     }
 
-    @Delete(':token')
-    async remove(@Param('token') token: string) : Promise<number | undefined>
+    @Delete(':tokenPair')
+    async remove(@Param('tokenPair') tokenPair: string) : Promise<string | undefined>
     {
-        return await this.pricesService.remove(token)
+        return await this.pricesService.remove(tokenPair)
     }
 }

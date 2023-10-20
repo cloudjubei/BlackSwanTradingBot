@@ -26,7 +26,11 @@ export class SignalsService
     }
     getFromCache(id: string, tokenPair: string, interval: string) : SignalModel
     {
-        return this.caches[id]?.getLatest(tokenPair, interval)
+        return this.caches[id]?.getLatest(tokenPair, interval) ?? new SignalModel(tokenPair, interval, Date.now(), 0)
+    }
+    getAllFromCache(id: string, token: string, interval: string) : SignalModel[]
+    {
+        return this.caches[id]?.getAll(token, interval) ?? []
     }
   
     getAllSignals() : string[]

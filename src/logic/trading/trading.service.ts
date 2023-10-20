@@ -65,9 +65,9 @@ export class TradingService implements OnApplicationBootstrap
 
     private setupWebsocketConnections()
     {
-        const pricePorts = this.pricesService.getAllPorts()
-        for(const port of pricePorts){
-            this.websocketsService.connect(port)
+        const priceUrls = this.pricesService.getAllUrls()
+        for(const url of priceUrls){
+            this.websocketsService.connect(url)
         }
         // const priceTokens = this.pricesService.getAllTokens()
         // for(const token of priceTokens){
@@ -77,9 +77,9 @@ export class TradingService implements OnApplicationBootstrap
         //     })
         // }
         
-        const signalPorts = this.signalsService.getAllPorts()
-        for(const port of signalPorts){
-            this.websocketsService.connect(port)
+        const signalUrls = this.signalsService.getAllUrls()
+        for(const url of signalUrls){
+            this.websocketsService.connect(url)
         }
         // const signalIds = this.signalsService.getAllSignals()
         // for(const signalId of signalIds){
@@ -97,9 +97,9 @@ export class TradingService implements OnApplicationBootstrap
     {
         const tokens = this.pricesService.getAllTokens()
         for(const token of tokens){
-            const port = this.pricesService.getPort(token)
+            const url = this.pricesService.getUrl(token)
             try{
-                const price = await this.websocketsService.sendMessage(port, "price_latest", token)
+                const price = await this.websocketsService.sendMessage(url, "price_latest", token)
                 if (price){
                     this.pricesService.storeInCache(price as PriceModel)
                 }
@@ -113,17 +113,17 @@ export class TradingService implements OnApplicationBootstrap
     {
         const ids = this.signalsService.getAllSignals()
         for(const identifier of ids){
-            const port = this.signalsService.getSignalPort(identifier)
+            const url = this.signalsService.getSignalUrl(identifier)
             for(const tokenPair of this.signalsService.getSignalTokens(identifier)){
                 for(const interval of this.signalsService.getSignalIntervals(identifier, tokenPair)){
                     try{
-                        const signal = await this.websocketsService.sendMessage(port, "signal_latest", { identifier, tokenPair, interval })
+                        const signal = await this.websocketsService.sendMessage(url, "signal_latest", { identifier, tokenPair, interval })
                         if (signal){
                             this.signalsService.storeInCache(identifier, signal as SignalModel)
                         }
                     }catch(error){
                         // TODO: handle multiple timeouts
-                        console.error("updateSignals identifier: " + identifier + " port: " + port + " token: " + tokenPair + " interval: " + interval + " error: ", error)
+                        console.error("updateSignals identifier: " + identifier + " url: " + url + " token: " + tokenPair + " interval: " + interval + " error: ", error)
                     }
                 }
             }
