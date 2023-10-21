@@ -201,6 +201,15 @@ export class TransactionService
         }
         console.log("this.wallet_free: ", this.walletFree.amounts)
 
+        for(const tokenPair of this.identityService.getTokens()){
+            this.client.getTradeFee({ symbol: tokenPair }).then( response => {
+                console.log("TRADING FEE:")
+                console.log(response)
+            }).catch(err => {
+                console.log("CANNOT GET TRADING FEE FOR: " + tokenPair)   
+            })
+        }
+
         this.client.getOpenOrders().then(orders => {
             const symbols = ArrayUtils.FilterUnique(orders.map(o => o.symbol))
             Promise.all(symbols.map(symbol => this.client.cancelAllSymbolOrders({ symbol })))
