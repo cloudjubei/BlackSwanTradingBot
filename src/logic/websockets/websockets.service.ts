@@ -1,13 +1,20 @@
 import { Injectable } from "@nestjs/common"
+import { IdentityService } from "logic/identity/identity.service"
 import { Socket, io } from "socket.io-client"
 
 @Injectable()
 export class WebsocketsService
 {
     private sockets: { [key: string]: Socket } = {}
+    private timeout = 100
 
-    constructor()
+    constructor(
+        private readonly identityService: IdentityService
+    )
     {
+        const config = this.identityService.config
+        
+        this.timeout = config.socket_timeout
     }
 
     connect(url: string) : Socket
@@ -31,7 +38,7 @@ export class WebsocketsService
     {
         const socket = this.sockets[url]
         if (socket){
-            return await socket.timeout(100).emitWithAck(type, message)
+            return await socket.timeout(this.timeout).emitWithAck(type, message)
         }
     }
 }

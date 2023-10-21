@@ -5,6 +5,7 @@
         "FDUSD": "10.0"
     },
     "default_host" : "http://52.29.230.39",
+    "socket_timeout" : 1000,
     "prices": {
         "BTCUSDT": {
             "port": 3002
