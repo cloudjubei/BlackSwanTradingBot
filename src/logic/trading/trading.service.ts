@@ -55,10 +55,10 @@ export class TradingService implements OnApplicationBootstrap
 
         console.log(`TradingService setup ${Date.now()}`)
 
-        // await this.transactionService.setup()
+        await this.transactionService.setup()
         this.setupWebsocketConnections()
 
-        // this.hasSetup = true
+        this.hasSetup = true
 
         console.log(`TradingService done`)
     }
@@ -99,13 +99,12 @@ export class TradingService implements OnApplicationBootstrap
             const url = this.pricesService.getUrl(token)
             try{
                 const price = await this.websocketsService.sendMessage(url, "price_latest", token)
-                console.log("price received:")
-                console.log(price)
-                // if (price){
-                //     this.pricesService.storeInCache(price as PriceModel)
-                // }
+                if (price){
+                    this.pricesService.storeInCache(price as PriceModel)
+                }
             }catch(error){
                 // TODO: handle multiple timeouts
+                console.error("updatePrices url: " + url + " token: " + token + " error: ", error)
             }
         }
     }
@@ -119,11 +118,9 @@ export class TradingService implements OnApplicationBootstrap
                 for(const interval of this.signalsService.getSignalIntervals(identifier, tokenPair)){
                     try{
                         const signal = await this.websocketsService.sendMessage(url, "signal_latest", JSON.stringify({ identifier, tokenPair, interval }))
-                        console.log("signal received:")
-                        console.log(signal)
-                        // if (signal){
-                        //     this.signalsService.storeInCache(identifier, signal as SignalModel)
-                        // }
+                        if (signal){
+                            this.signalsService.storeInCache(identifier, signal as SignalModel)
+                        }
                     }catch(error){
                         // TODO: handle multiple timeouts
                         console.error("updateSignals identifier: " + identifier + " url: " + url + " token: " + tokenPair + " interval: " + interval + " error: ", error)

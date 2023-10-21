@@ -19,14 +19,11 @@ export class WebsocketsService
 
     connect(url: string) : Socket
     {
-        console.log("SETTING UP SOCKET url: " + url)
+        if (this.sockets[url]){
+            return this.sockets[url]
+        }
+
         const socket = io(url)
-        socket.on("connect", () =>{
-            console.log("CONNECT socket url: " + url)
-        })
-        socket.io.on("ping", () => {
-            console.log("PING socket url: " + url)
-        });
 
         this.sockets[url] = socket
 
