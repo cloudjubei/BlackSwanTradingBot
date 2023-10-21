@@ -4,13 +4,12 @@
         "USDT": "10.0",
         "FDUSD": "10.0"
     },
+    "default_host" : "http://52.29.230.39",
     "prices": {
         "BTCUSDT": {
-            "host": "http://52.29.230.39",
             "port": 3002
         },
         "BTCFDUSD": {
-            "host": "http://52.29.230.39",
             "port": 3002
         }
     },

@@ -4,6 +4,7 @@ import ConfigSignalInputModel from 'commons/models/config/ConfigSignalInputModel
 export default class ConfigModel
 {
     minimum_amounts: { [key:string] : string } = {}
+    default_host: string
     prices: { [key:string] : ConfigConnectionInputModel } = {}
     intervals: string[] = []
     signals: { [key:string] : ConfigSignalInputModel } = {}
