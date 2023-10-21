@@ -11,6 +11,7 @@ import { TradingSetupConfigModelUtils } from 'models/trading/TradingSetupConfigM
 import MathUtils from "commons/lib/mathUtils"
 import SignalModel from "commons/models/signal/SignalModel.dto"
 import PriceModel from "commons/models/price/PriceModel.dto"
+import PriceKlineModel from 'commons/models/price/PriceKlineModel.dto'
 
 @Injectable()
 export class TradingService implements OnApplicationBootstrap
@@ -95,16 +96,18 @@ export class TradingService implements OnApplicationBootstrap
     private async updatePrices()
     {
         const tokens = this.pricesService.getAllTokens()
-        for(const token of tokens){
-            const url = this.pricesService.getUrl(token)
-            try{
-                const price = await this.websocketsService.sendMessage(url, "price_latest", token)
-                if (price){
-                    this.pricesService.storeInCache(price as PriceModel)
+        for(const tokenPair of tokens){
+            const url = this.pricesService.getUrl(tokenPair)
+            for(const interval of this.pricesService.getAllIntervals(tokenPair)){
+                try{
+                    const price = await this.websocketsService.sendMessage(url, "price_latestKline", JSON.stringify({ tokenPair, interval }))
+                    if (price){
+                        this.pricesService.storeInCache(price as PriceKlineModel)
+                    }
+                }catch(error){
+                    // TODO: handle multiple timeouts
+                    console.error("updatePrices url: " + url + " tokenPair: " + tokenPair + " interval: " + interval + " error: ", error)
                 }
-            }catch(error){
-                // TODO: handle multiple timeouts
-                console.error("updatePrices url: " + url + " token: " + token + " error: ", error)
             }
         }
     }
@@ -164,16 +167,16 @@ export class TradingService implements OnApplicationBootstrap
 
     private async updateOpenTransactions(setup: TradingSetupModel) : Promise<boolean>
     {
-        let hasNewTransactions = false
+        let hasNoTransactionsOpen = true
         const openTransactions = Object.values(setup.openTransactions)
         for(const t of openTransactions){
             const newT = await this.transactionService.updateTransaction(setup, t)
             if (newT){
-                hasNewTransactions = true
+                hasNoTransactionsOpen = false
                 TradingSetupModelUtils.UpdateTransaction(setup, newT)
             }
         }
-        return hasNewTransactions
+        return hasNoTransactionsOpen
     }
 
     private async attemptAction(setup: TradingSetupModel) : Promise<boolean>

@@ -5,6 +5,7 @@ export default class TradingTransactionModel
     secondToken: string
     firstAmount: string
     secondAmount: string
+    wantedPriceAmount: string
     priceAmount: string
     transactionId: string
     complete: boolean = false

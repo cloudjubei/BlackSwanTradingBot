@@ -70,12 +70,12 @@ export class TransactionService
         if (!transaction.complete){
             return this.client.getOrder({  symbol: TradingTransactionModelUtils.GetTokenPair(transaction), orderId: Number(transaction.transactionId) })
             .then(response => {
-                const newTransaction = this.processBinanceResponse(setup, response, transaction)
+                const newTransaction = this.processBinanceResponse(setup, transaction.wantedPriceAmount, response, transaction)
 
                 if (this.shouldCancel(setup, newTransaction)){
                     return this.client.cancelOrder({  symbol: TradingTransactionModelUtils.GetTokenPair(transaction), orderId: Number(transaction.transactionId) })
                     .then(response => {
-                        return this.processBinanceResponse(setup, response, newTransaction)
+                        return this.processBinanceResponse(setup, newTransaction.wantedPriceAmount, response, newTransaction)
                     })
                 }
                 return newTransaction
@@ -86,7 +86,6 @@ export class TransactionService
     
     async makeTransaction(setup: TradingSetupModel, action: number) : Promise<TradingTransactionModel> | undefined
     {
-        console.log("makeTransaction for action: " + action + " and setup id: ", setup.id)
         if (action == 0) { return }
 
         const buy = action > 0 // action < 0 == SELL
@@ -115,17 +114,18 @@ export class TransactionService
     {
         let response : any | undefined
 
+        let wantedPrice = setup.currentPriceAmount
         if (setup.config.useLimitOrders){
-            const price = this.getLimitPrice(setup, buy)
-            const quantity = this.getLimitQuantity(amount, price, buy)
-            console.log("makeTrade makeLimitTransaction price: " + price + " quantity: " + quantity + " for setup id: " + setup.id)
-            response = await this.makeLimitTransaction(TradingSetupConfigModelUtils.GetTokenPair(setup.config), quantity, price, buy)
+            wantedPrice = this.getLimitPrice(setup, buy)
+            const quantity = this.getLimitQuantity(amount, wantedPrice, buy)
+            console.log("makeTrade makeLimitTransaction currentPrice: " + setup.currentPriceAmount + " wantedPrice: " + wantedPrice + " quantity: " + quantity + " for setup id: " + setup.id)
+            response = await this.makeLimitTransaction(TradingSetupConfigModelUtils.GetTokenPair(setup.config), quantity, wantedPrice, buy)
         }else{
             response = await this.makeMarketTransaction(TradingSetupConfigModelUtils.GetTokenPair(setup.config), amount, buy)
         }
         
         if (response){
-            return this.processBinanceResponse(setup, response)
+            return this.processBinanceResponse(setup, wantedPrice, response)
         }
     }
 
@@ -166,7 +166,7 @@ export class TransactionService
             side: buy ? 'BUY' : 'SELL',
             quantity: Number(quantity),
             price: Number(price),
-            timeInForce: 'GTC'
+            // timeInForce: 'GTC'
         }
         try{
             return await this.client.submitNewOrder(parameters as NewSpotOrderParams)
@@ -177,6 +177,8 @@ export class TransactionService
 
     private updateWalletBalances()
     {
+        // this.client.getTradeFee()
+
         this.client
         .getAccountInformation()
         .then((result) => {
@@ -223,7 +225,7 @@ export class TransactionService
             }
         }
         if (setup.config.limitOrderCancelDueToPriceDivergence){
-            const priceDifference = MathUtils.Abs(MathUtils.SubtractNumbers(setup.currentPriceAmount, transaction.priceAmount))
+            const priceDifference = MathUtils.Abs(MathUtils.SubtractNumbers(setup.currentPriceAmount, transaction.wantedPriceAmount))
             if (MathUtils.IsGreaterThan(priceDifference, setup.config.limitOrderCancelDueToPriceDivergence)){
                 return true
             }
@@ -231,9 +233,9 @@ export class TransactionService
         return false
     }
 
-    private processBinanceResponse(setup: TradingSetupModel, response: any, transaction?: TradingTransactionModel)
+    private processBinanceResponse(setup: TradingSetupModel, wantedPrice: string, response: any, transaction?: TradingTransactionModel)
     {
-        const binanceTransaction = BinanceTransactionModelUtils.FromResponse(setup.config.firstToken, setup.config.secondToken, response)
+        const binanceTransaction = BinanceTransactionModelUtils.FromResponse(setup.config.firstToken, setup.config.secondToken, wantedPrice, response)
         this.updateWalletFromTransaction(binanceTransaction)
         return BinanceTransactionModelUtils.ToTradingTransaction(binanceTransaction, transaction)
     }

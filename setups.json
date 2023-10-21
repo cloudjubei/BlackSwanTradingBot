@@ -5,11 +5,75 @@
             "firstToken": "BTC",
             "secondToken": "USDT",
             "interval": "1s",
-            "signal": "manual",
+            "signal": "bollingerLowSignal",
 
             "useLimitOrders": true,
-            "limitOrderBuyOffset": -0.001,
-            "limitOrderSellOffset": -0.001,
+            "limitOrderBuyOffset": -0.0001,
+            "limitOrderSellOffset": 0.0001,
+            "limitOrderCancelDueToChecksElapsed": 10000,
+            "limitOrderCancelDueToTimeElapsed": 60,
+            "limitOrderCancelDueToPriceDivergence": "50"
+        },
+        "startingFirstAmount": "0",
+        "startingSecondAmount": "1000",
+        "firstAmount": "0",
+        "secondAmount": "1000",
+        "lastUpdate": 0,
+
+        "currentPriceAmount": "0",
+        "lowestPriceAmount": "99999999999",
+        "highestPriceAmount": "0",
+
+        "tradeEntryPriceAmount": "0",
+        "tradeLowestPriceAmount": "99999999999",
+        "tradeHighestPriceAmount": "0",
+
+        "transactions": [],
+        "openTransactions": {}
+    },
+    {
+        "id": "test2",
+        "config": {
+            "firstToken": "BTC",
+            "secondToken": "USDT",
+            "interval": "1s",
+            "signal": "rsi30Oversold",
+
+            "useLimitOrders": true,
+            "limitOrderBuyOffset": -0.0001,
+            "limitOrderSellOffset": 0.0001,
+            "limitOrderCancelDueToChecksElapsed": 10000,
+            "limitOrderCancelDueToTimeElapsed": 60,
+            "limitOrderCancelDueToPriceDivergence": "50"
+        },
+        "startingFirstAmount": "0",
+        "startingSecondAmount": "1000",
+        "firstAmount": "0",
+        "secondAmount": "1000",
+        "lastUpdate": 0,
+
+        "currentPriceAmount": "0",
+        "lowestPriceAmount": "99999999999",
+        "highestPriceAmount": "0",
+
+        "tradeEntryPriceAmount": "0",
+        "tradeLowestPriceAmount": "99999999999",
+        "tradeHighestPriceAmount": "0",
+
+        "transactions": [],
+        "openTransactions": {}
+    },
+    {
+        "id": "test3",
+        "config": {
+            "firstToken": "BTC",
+            "secondToken": "USDT",
+            "interval": "1s",
+            "signal": "rsi9Oversold",
+
+            "useLimitOrders": true,
+            "limitOrderBuyOffset": -0.0001,
+            "limitOrderSellOffset": 0.0001,
             "limitOrderCancelDueToChecksElapsed": 10000,
             "limitOrderCancelDueToTimeElapsed": 60,
             "limitOrderCancelDueToPriceDivergence": "50"

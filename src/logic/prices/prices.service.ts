@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common'
 import ArrayUtils from "commons/lib/arrayUtils"
-import PriceModel from "commons/models/price/PriceModel.dto"
-import PriceCache from 'commons/models/cache/PriceCache'
 import { IdentityService } from 'logic/identity/identity.service'
 import ConfigConnectionInputModel, { ConfigConnectionInputModelUtils } from 'commons/models/config/ConfigConnectionInputModel.dto'
+import PriceKlineCache from 'commons/models/cache/PriceKlineCache'
+import PriceKlineModel from 'commons/models/price/PriceKlineModel.dto'
 
 @Injectable()
 export class PricesService
 {
     private urls: { [key: string]: string } = {}
-    private cache = new PriceCache()
+    private cache = new PriceKlineCache()
 
     constructor(
         private readonly identityService: IdentityService,
@@ -21,22 +21,26 @@ export class PricesService
         }
     }
 
-    storeInCache(price: PriceModel)
+    storeInCache(price: PriceKlineModel)
     {
-        this.cache.storePrice(price)
+        this.cache.storeKline(price)
     }
-    getFromCache(token: string, interval: string) : PriceModel
+    getFromCache(token: string, interval: string) : PriceKlineModel
     {
         return this.cache.getLatest(token, interval)
     }
-    getAllFromCache(token: string, interval: string) : PriceModel[]
+    getAllFromCache(token: string, interval: string) : PriceKlineModel[]
     {
         return this.cache.getAll(token, interval)
     }
   
     getAllTokens() : string[]
     {
-        return Object.keys(this.urls)
+        return this.cache.getAllKeys()
+    }
+    getAllIntervals(token: string) : string[]
+    {
+        return this.cache.getAllInternalKeys(token)
     }
     getAllUrls() : string[]
     {

@@ -8,18 +8,20 @@ export default class BinanceTransactionModel
     secondToken: string
     firstAmount: string
     secondAmount: string
+    wantedPrice: string
     price: string
     timestamp: number
     status: string
     buy: boolean
 
-    constructor(id: string, firstToken: string, secondToken: string, firstAmount: string, secondAmount: string, price: string, timestamp: number, status: string, buy: boolean)
+    constructor(id: string, firstToken: string, secondToken: string, firstAmount: string, secondAmount: string, wantedPrice: string, price: string, timestamp: number, status: string, buy: boolean)
     {
         this.id = id
         this.firstToken = firstToken
         this.secondToken = secondToken
         this.firstAmount = firstAmount
         this.secondAmount = secondAmount
+        this.wantedPrice = wantedPrice
         this.price = price
         this.timestamp = timestamp
         this.status = status
@@ -29,7 +31,7 @@ export default class BinanceTransactionModel
 
 export class BinanceTransactionModelUtils
 {
-    static FromResponse(firstToken: string, secondToken: string, response: any) : BinanceTransactionModel
+    static FromResponse(firstToken: string, secondToken: string, wantedPrice: string, response: any) : BinanceTransactionModel
     {
         const fullAmount = response['executedQty']
         let price = '0'
@@ -38,7 +40,7 @@ export class BinanceTransactionModelUtils
             const percentAmount = MathUtils.DivideNumbers(fill['qty'], fullAmount)
             price = MathUtils.AddNumbers(price, MathUtils.MultiplyNumbers(percentAmount, fill['price']))
         }
-        return new BinanceTransactionModel('' + response['orderId'], firstToken, secondToken, response['executedQty'], response['cummulativeQuoteQty'], price, response['transactTime'], response['status'], response['side'] === 'BUY')
+        return new BinanceTransactionModel('' + response['orderId'], firstToken, secondToken, response['executedQty'], response['cummulativeQuoteQty'], wantedPrice, price, response['transactTime'], response['status'], response['side'] === 'BUY')
     }
 
     static ToTradingTransaction(m: BinanceTransactionModel, augmentingTransaction: TradingTransactionModel = undefined) : TradingTransactionModel
@@ -49,6 +51,7 @@ export class BinanceTransactionModelUtils
             secondToken: m.secondToken,
             firstAmount: m.firstAmount,
             secondAmount: m.secondAmount,
+            wantedPriceAmount: m.wantedPrice,
             priceAmount: m.price,
             transactionId: m.id,
             complete: BinanceTransactionModelUtils.IsCompleted(m),
