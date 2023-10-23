@@ -46,8 +46,8 @@ export class TransactionService
             baseUrl
         })
 
-        // this.makeMarketBuyTransaction('BTCBUSD', '20')
-        // await this.makeMarketTransaction('BTCBUSD', '0.34549100', false)
+        // await this.makeMarketTransaction('BTCBUSD', '41795.75', true)
+        // await this.makeMarketTransaction('BTCUSDT', '0.369470', false)
         // this.makeLimitTransaction('BTCBUSD', '0.000771', '25970', false)
         // this.updateTransaction({
         //     buy: false,
@@ -118,7 +118,7 @@ export class TransactionService
         if (setup.config.useLimitOrders){
             wantedPrice = this.getLimitPrice(setup, buy)
             const quantity = this.getLimitQuantity(amount, wantedPrice, buy)
-            console.log("makeTrade makeLimitTransaction currentPrice: " + setup.currentPriceAmount + " wantedPrice: " + wantedPrice + " quantity: " + quantity + " for setup id: " + setup.id)
+            console.log("makeTrade LIMIT " + (buy ? "BUY" : "SELL") + " currentPrice: " + setup.currentPriceAmount + " wantedPrice: " + wantedPrice + " quantity: " + quantity + " for setup id: " + setup.id)
             response = await this.makeLimitTransaction(TradingSetupConfigModelUtils.GetTokenPair(setup.config), quantity, wantedPrice, buy)
         }else{
             response = await this.makeMarketTransaction(TradingSetupConfigModelUtils.GetTokenPair(setup.config), amount, buy)

@@ -95,40 +95,41 @@ export class TradingService implements OnApplicationBootstrap
 
     private async updatePrices()
     {
-        const tokens = this.pricesService.getAllTokens()
-        for(const tokenPair of tokens){
+        const setups = this.tradingSetupsService.getAll()
+        for(const setup of setups) {
+            const tokenPair = TradingSetupModelUtils.GetTokenPair(setup)
+            const interval = setup.config.interval
             const url = this.pricesService.getUrl(tokenPair)
-            for(const interval of this.pricesService.getAllIntervals(tokenPair)){
-                try{
-                    const price = await this.websocketsService.sendMessage(url, "price_latestKline", JSON.stringify({ tokenPair, interval }))
-                    if (price){
-                        this.pricesService.storeInCache(price as PriceKlineModel)
-                    }
-                }catch(error){
-                    // TODO: handle multiple timeouts
-                    console.error("updatePrices url: " + url + " tokenPair: " + tokenPair + " interval: " + interval + " error: ", error)
+
+            try{
+                const price = await this.websocketsService.sendMessage(url, "price_latestKline", JSON.stringify({ tokenPair, interval }))
+                if (price){
+                    this.pricesService.storeInCache(price as PriceKlineModel)
                 }
+            }catch(error){
+                // TODO: handle multiple timeouts
+                console.error("updatePrices url: " + url + " tokenPair: " + tokenPair + " interval: " + interval + " error: ", error)
             }
         }
     }
 
     private async updateSignals()
     {
-        const ids = this.signalsService.getAllSignals()
-        for(const identifier of ids){
-            const url = this.signalsService.getSignalUrl(identifier)
-            for(const tokenPair of this.signalsService.getSignalTokens(identifier)){
-                for(const interval of this.signalsService.getSignalIntervals(identifier, tokenPair)){
-                    try{
-                        const signal = await this.websocketsService.sendMessage(url, "signal_latest", JSON.stringify({ identifier, tokenPair, interval }))
-                        if (signal){
-                            this.signalsService.storeInCache(identifier, signal as SignalModel)
-                        }
-                    }catch(error){
-                        // TODO: handle multiple timeouts
-                        console.error("updateSignals identifier: " + identifier + " url: " + url + " token: " + tokenPair + " interval: " + interval + " error: ", error)
-                    }
+        const setups = this.tradingSetupsService.getAll()
+        for(const setup of setups) {
+            const signalId = setup.config.signal
+            const tokenPair = TradingSetupModelUtils.GetTokenPair(setup)
+            const interval = setup.config.interval
+            const url = this.signalsService.getSignalUrl(signalId)
+
+            try{
+                const signal = await this.websocketsService.sendMessage(url, "signal_latest", JSON.stringify({ identifier: signalId, tokenPair, interval }))
+                if (signal){
+                    this.signalsService.storeInCache(signalId, signal as SignalModel)
                 }
+            }catch(error){
+                // TODO: handle multiple timeouts
+                console.error("updateSignals signalId: " + signalId + " url: " + url + " token: " + tokenPair + " interval: " + interval + " error: ", error)
             }
         }
     }

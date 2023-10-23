@@ -5,7 +5,7 @@ import TradingTransactionModel from './transaction/TradingTransactionModel.dto'
 import TradingSetupStatusType, { TradingSetupStatusTypeAPI } from './TradingSetupStatusType.dto'
 import MathUtils from "commons/lib/mathUtils"
 import SignalModel from "commons/models/signal/SignalModel.dto"
-import { Timestamp } from "commons/models/swagger.consts"
+import { StringMap, Timestamp } from "commons/models/swagger.consts"
 
 export default class TradingSetupModel
 {
@@ -30,11 +30,16 @@ export default class TradingSetupModel
     @ApiProperty() tradeHighestPriceAmount: string = "0"
 
     @ApiProperty() transactions: TradingTransactionModel[] = []
-    @ApiProperty() openTransactions: { [id: string] : TradingTransactionModel } = {}
+    @ApiProperty({ type: "object", additionalProperties: { type: "TradingTransactionModel" }}) openTransactions: { [id: string] : TradingTransactionModel } = {}
 }
 
 export class TradingSetupModelUtils
 {
+    static GetTokenPair(t: TradingSetupModel) : string
+    {
+        return t.config.firstToken + t.config.secondToken
+    }
+
     static UpdatePrice(t: TradingSetupModel, priceAmount: string) : TradingSetupModel
     {
         t.status = TradingSetupStatusType.RUNNING
