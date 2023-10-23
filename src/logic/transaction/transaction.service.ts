@@ -27,13 +27,21 @@ export class TransactionService
         }
     }
 
-    getWalletFree() : WalletModel
+    async getWalletFree() : Promise<WalletModel>
     {
+        await this.updateWalletBalances()
         return this.walletFree
     }
     getWalletLocked() : WalletModel
     {
         return this.walletLocked
+    }
+    async convertAllBTC() : Promise<WalletModel>
+    {
+        const amount = this.walletFree.amounts['BTC']
+        await this.makeMarketTransaction('BTCUSDT', amount, false)
+        await this.updateWalletBalances()
+        return this.walletFree
     }
 
     async setup()
@@ -62,7 +70,7 @@ export class TransactionService
         //     firstUpdateTimestamp: Date.now(),
         //     lastUpdateTimestamp: Date.now()
         // })
-        await this.updateWalletBalances()
+        await this.updateWalletBalances(false)
     }
 
     async updateTransaction(setup: TradingSetupModel, transaction: TradingTransactionModel) : Promise<TradingTransactionModel>
@@ -175,22 +183,20 @@ export class TransactionService
         }
     }
 
-    private updateWalletBalances()
+    private async updateWalletBalances(walletOnly: boolean = true)
     {
-        // this.client.getTradeFee()
-
-        this.client
+        await this.client
         .getAccountInformation()
         .then((result) => {
             console.log('getAccountInformation result: ', result)
-            this.setupWallet(result.balances)
+            this.setupWallet(result.balances, walletOnly)
         })
         .catch((err) => {
             console.error('getAccountInformation error: ', err);
         })
     }
 
-    private setupWallet(balances: Array<any>)
+    private setupWallet(balances: Array<any>, walletOnly: boolean = true)
     {
         for (const b of balances){
             const token = b['asset']
@@ -200,6 +206,8 @@ export class TransactionService
             }
         }
         console.log("this.wallet_free: ", this.walletFree.amounts)
+
+        if (walletOnly){ return }
 
         for(const tokenPair of this.identityService.getTokens()){
             this.client.getTradeFee({ symbol: tokenPair }).then( response => {

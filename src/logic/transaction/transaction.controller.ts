@@ -20,4 +20,10 @@ export class TransactionController
     {
         return await this.transactionService.getWalletLocked()
     }
+
+    @Post('convertAllBTC')
+    async convertAllBTC() : Promise<WalletModel>
+    {
+        return await this.transactionService.convertAllBTC()
+    }
 }
