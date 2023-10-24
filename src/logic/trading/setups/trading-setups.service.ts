@@ -31,6 +31,8 @@ export class TradingSetupsService
     {
         this.setups[tradingSetup.id] = tradingSetup
 
+        StorageUtils.createOrWriteToFile('.', 'setups.json', JSON.stringify(this.getAll()))
+        
         return tradingSetup
     }
 

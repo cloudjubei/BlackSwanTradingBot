@@ -55,6 +55,7 @@ export class BinanceTransactionModelUtils
             priceAmount: m.price,
             transactionId: m.id,
             complete: BinanceTransactionModelUtils.IsCompleted(m),
+            canceled: BinanceTransactionModelUtils.IsCanceled(m),
             firstUpdateTimestamp: augmentingTransaction?.firstUpdateTimestamp ?? Date.now(),
             lastUpdateTimestamp: Date.now(),
             checks: (augmentingTransaction?.checks ?? -1) + 1

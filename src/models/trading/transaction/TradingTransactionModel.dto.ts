@@ -9,6 +9,7 @@ export default class TradingTransactionModel
     priceAmount: string
     transactionId: string
     complete: boolean = false
+    canceled: boolean = false
     checks: number = 0
     firstUpdateTimestamp: number = 0
     lastUpdateTimestamp: number = 0

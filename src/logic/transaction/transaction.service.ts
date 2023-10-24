@@ -188,7 +188,9 @@ export class TransactionService
         await this.client
         .getAccountInformation()
         .then((result) => {
-            console.log('getAccountInformation result: ', result)
+            if (!walletOnly){
+                console.log('getAccountInformation result: ', result)
+            }
             this.setupWallet(result.balances, walletOnly)
         })
         .catch((err) => {
@@ -205,6 +207,7 @@ export class TransactionService
                 this.walletLocked.amounts[token] = b['locked']
             }
         }
+    
         console.log("this.wallet_free: ", this.walletFree.amounts)
 
         if (walletOnly){ return }
@@ -232,6 +235,7 @@ export class TransactionService
 
     private shouldCancel(setup: TradingSetupModel, transaction: TradingTransactionModel) : boolean
     {
+        if (transaction.canceled) { return false }
         if (transaction.checks > setup.config.limitOrderCancelDueToChecksElapsed){
             return true
         }

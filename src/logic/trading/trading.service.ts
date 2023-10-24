@@ -146,13 +146,13 @@ export class TradingService implements OnApplicationBootstrap
     {
         if (setup.status === TradingSetupStatusType.TERMINATED){ return }
 
-        if (!await this.updatePrice(setup)) { return }
+        if (!this.updatePrice(setup)) { return }
         if (!await this.updateOpenTransactions(setup)) { return }
         if (!await this.attemptAction(setup)) { return }
         this.tradingSetupsService.save(setup)
     }
 
-    private async updatePrice(setup: TradingSetupModel) : Promise<boolean>
+    private updatePrice(setup: TradingSetupModel) : boolean
     {
         const tokenPair = TradingSetupConfigModelUtils.GetTokenPair(setup.config)
         const interval = setup.config.interval
@@ -171,10 +171,15 @@ export class TradingService implements OnApplicationBootstrap
         let hasNoTransactionsOpen = true
         const openTransactions = Object.values(setup.openTransactions)
         for(const t of openTransactions){
-            const newT = await this.transactionService.updateTransaction(setup, t)
-            if (newT){
+            try{
+                const newT = await this.transactionService.updateTransaction(setup, t)
+                if (newT){
+                    hasNoTransactionsOpen = false
+                    TradingSetupModelUtils.UpdateTransaction(setup, newT)
+                }
+            }catch(e){
                 hasNoTransactionsOpen = false
-                TradingSetupModelUtils.UpdateTransaction(setup, newT)
+                console.error("updateOpenTransactions error: " + JSON.stringify(e))
             }
         }
         return hasNoTransactionsOpen

@@ -103,7 +103,7 @@ export class TradingSetupModelUtils
 
     static UpdateTakeProfit(t: TradingSetupModel) : number
     {
-        if (MathUtils.IsBiggerThanZero(t.firstAmount)) { return 0 }
+        if (MathUtils.IsZero(t.firstAmount)) { return 0 }
 
         const takeProfit = t.config.takeProfit
         if (takeProfit){

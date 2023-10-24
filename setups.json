@@ -7,6 +7,10 @@
             "interval": "1s",
             "signal": "bollingerLowSignal",
 
+            "takeProfit": {
+                "percentage": 0.001
+            },
+
             "useLimitOrders": true,
             "limitOrderBuyOffset": -0.0001,
             "limitOrderSellOffset": 0.0001,
@@ -39,6 +43,13 @@
             "interval": "1s",
             "signal": "rsi30Oversold",
 
+            "takeProfit": {
+                "percentage": 0.003,
+                "trailingStop": {
+                    "deltaPercentage": 0.002
+                }
+            },
+
             "useLimitOrders": true,
             "limitOrderBuyOffset": -0.0001,
             "limitOrderSellOffset": 0.0001,
@@ -70,6 +81,14 @@
             "secondToken": "USDT",
             "interval": "1s",
             "signal": "rsi9Oversold",
+
+            "takeProfit": {
+                "percentage": 0.001,
+                "trailingStop": {
+                    "deltaPercentage": 0.005,
+                    "hardLimitPercentage": 0.01
+                }
+            },
 
             "useLimitOrders": true,
             "limitOrderBuyOffset": -0.0001,
