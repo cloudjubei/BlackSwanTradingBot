@@ -64,9 +64,13 @@ export class TradingSetupModelUtils
         if (transaction.complete){
             delete t.openTransactions[transaction.transactionId]
             t.transactions.push(transaction)
-            t.tradeEntryPriceAmount = t.currentPriceAmount
-            t.tradeLowestPriceAmount = t.currentPriceAmount
-            t.tradeHighestPriceAmount = t.currentPriceAmount
+            
+            //TODO: fix once trades are actually per order
+            if (transaction.buy){
+                t.tradeEntryPriceAmount = t.currentPriceAmount
+                t.tradeLowestPriceAmount = t.currentPriceAmount
+                t.tradeHighestPriceAmount = t.currentPriceAmount
+            }
     
             if (transaction.buy){
                 t.firstAmount = MathUtils.AddNumbers(t.firstAmount, transaction.firstAmount)
