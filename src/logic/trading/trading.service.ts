@@ -95,10 +95,26 @@ export class TradingService implements OnApplicationBootstrap
 
     private async updatePrices()
     {
+        for(const tokenPair of this.pricesService.getAllTokens()){
+            const interval = '1s'
+            const url = this.pricesService.getUrl(tokenPair)
+            try{
+                const price = await this.websocketsService.sendMessage(url, "price_latestKline", JSON.stringify({ tokenPair, interval }))
+                if (price){
+                    this.pricesService.storeInCache(price as PriceKlineModel)
+                }
+            }catch(error){
+                // TODO: handle multiple timeouts
+                console.error("updatePrices url: " + url + " tokenPair: " + tokenPair + " interval: " + interval + " error: ", error)
+            }
+        }
+
         const setups = this.tradingSetupsService.getAll()
         for(const setup of setups) {
             const tokenPair = TradingSetupModelUtils.GetTokenPair(setup)
             const interval = setup.config.interval
+            if (interval === '1s') { continue }
+
             const url = this.pricesService.getUrl(tokenPair)
 
             try{
