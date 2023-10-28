@@ -21,6 +21,12 @@ export class TradingSetupsController
         return await this.tradingSetupsService.get(id)
     }
 
+    @Post()
+    async update(@Body() setup: TradingSetupModel) : Promise<TradingSetupModel>
+    {
+        return await this.tradingSetupsService.save(setup)
+    }
+
     @Post(':id/:startingFirstAmount/:startingSecondAmount')
     async add(@Param('id') id: string, @Param('startingFirstAmount') startingFirstAmount: string, @Param('startingSecondAmount') startingSecondAmount: string, @Body() config: TradingSetupConfigModel) : Promise<TradingSetupModel>
     {

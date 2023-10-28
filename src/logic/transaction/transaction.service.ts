@@ -207,10 +207,10 @@ export class TransactionService
                 this.walletLocked.amounts[token] = b['locked']
             }
         }
-    
-        console.log("this.wallet_free: ", this.walletFree.amounts)
 
         if (walletOnly){ return }
+    
+        console.log("this.wallet_free: ", this.walletFree.amounts)
 
         for(const tokenPair of this.identityService.getTokens()){
             this.client.getTradeFee({ symbol: tokenPair }).then( response => {
@@ -257,20 +257,6 @@ export class TransactionService
     private processBinanceResponse(setup: TradingSetupModel, wantedPrice: string, response: any, transaction?: TradingTransactionModel)
     {
         const binanceTransaction = BinanceTransactionModelUtils.FromResponse(setup.config.firstToken, setup.config.secondToken, wantedPrice, response)
-        this.updateWalletFromTransaction(binanceTransaction)
         return BinanceTransactionModelUtils.ToTradingTransaction(binanceTransaction, transaction)
-    }
-
-    private updateWalletFromTransaction(transaction: BinanceTransactionModel)
-    {
-        if (!BinanceTransactionModelUtils.IsCompleted(transaction)) { return }
-        if (transaction.buy){
-            this.walletFree.amounts[transaction.firstToken] = MathUtils.AddNumbers(this.walletFree.amounts[transaction.firstToken], transaction.firstAmount)
-            this.walletFree.amounts[transaction.secondToken] = MathUtils.SubtractNumbers(this.walletFree.amounts[transaction.secondToken], transaction.secondAmount)
-        }else{
-            this.walletFree.amounts[transaction.firstToken] = MathUtils.SubtractNumbers(this.walletFree.amounts[transaction.firstToken], transaction.firstAmount)
-            this.walletFree.amounts[transaction.secondToken] = MathUtils.AddNumbers(this.walletFree.amounts[transaction.secondToken], transaction.secondAmount)
-        }
-        console.log("this.wallet_free: ", this.walletFree.amounts)
     }
 }
