@@ -47,6 +47,8 @@ export class TransactionController
     async forceSell(@Param('id') id: string) : Promise<TradingSetupModel>
     {
         const setup = await this.tradingSetupsService.get(id)
+        if (Object.keys(setup.openTransactions).length > 0){ return setup }
+
         const transaction = await this.transactionService.makeTransaction(setup, -1)
         if (transaction){
             TradingSetupModelUtils.UpdateTransaction(setup, transaction)
