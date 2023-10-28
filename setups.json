@@ -19,9 +19,9 @@
             "limitOrderCancelDueToPriceDivergence": "50"
         },
         "startingFirstAmount": "0",
-        "startingSecondAmount": "1000",
+        "startingSecondAmount": "874",
         "firstAmount": "0",
-        "secondAmount": "1000",
+        "secondAmount": "874",
         "lastUpdate": 0,
 
         "currentPriceAmount": "0",
@@ -33,7 +33,8 @@
         "tradeHighestPriceAmount": "0",
 
         "transactions": [],
-        "openTransactions": {}
+        "openTransactions": {},
+        "failedDueToMarketMaking": 0
     },
     {
         "id": "test2",
@@ -72,7 +73,8 @@
         "tradeHighestPriceAmount": "0",
 
         "transactions": [],
-        "openTransactions": {}
+        "openTransactions": {},
+        "failedDueToMarketMaking": 0
     },
     {
         "id": "test3",
@@ -112,6 +114,7 @@
         "tradeHighestPriceAmount": "0",
 
         "transactions": [],
-        "openTransactions": {}
+        "openTransactions": {},
+        "failedDueToMarketMaking": 0
     }
 ]

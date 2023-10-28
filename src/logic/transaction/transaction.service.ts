@@ -84,7 +84,16 @@ export class TransactionService
                     return this.client.cancelOrder({  symbol: TradingTransactionModelUtils.GetTokenPair(transaction), orderId: Number(transaction.transactionId) })
                     .then(response => {
                         return this.processBinanceResponse(setup, newTransaction.wantedPriceAmount, response, newTransaction)
-                    })
+                    }).catch(e => {
+                        if (e.code === -2011){
+                            console.log("CANCEL ERROR UNKNOWN ORDER")
+                            transaction.complete = true
+                            transaction.canceled = true
+                            return transaction
+                        }
+                        console.log("CANCEL ERROR: ")
+                        console.log(e)
+                    }) 
                 }
                 return newTransaction
             })
@@ -134,6 +143,8 @@ export class TransactionService
         
         if (response){
             return this.processBinanceResponse(setup, wantedPrice, response)
+        }else{
+            setup.failedDueToMarketMaking += 1
         }
     }
 
@@ -179,7 +190,7 @@ export class TransactionService
         try{
             return await this.client.submitNewOrder(parameters as NewSpotOrderParams)
         }catch(e){
-            console.error("binance market transaction error: ", e)
+            console.error("binance market transaction error: ", e?.body)
         }
     }
 

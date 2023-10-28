@@ -31,6 +31,7 @@ export default class TradingSetupModel
 
     @ApiProperty() transactions: TradingTransactionModel[] = []
     @ApiProperty({ type: "object", additionalProperties: { type: "TradingTransactionModel" }}) openTransactions: { [id: string] : TradingTransactionModel } = {}
+    @ApiProperty() failedDueToMarketMaking: number = 0
 }
 
 export class TradingSetupModelUtils
