@@ -33,14 +33,15 @@ export class BinanceTransactionModelUtils
 {
     static FromResponse(firstToken: string, secondToken: string, wantedPrice: string, response: any) : BinanceTransactionModel
     {
-        const fullAmount = response['executedQty']
-        let price = '0'
-        const fills = response['fills'] ?? []
-        for (const fill of fills){
-            const percentAmount = MathUtils.DivideNumbers(fill['qty'], fullAmount)
-            price = MathUtils.AddNumbers(price, MathUtils.MultiplyNumbers(percentAmount, fill['price']))
-        }
-        return new BinanceTransactionModel('' + response['orderId'], firstToken, secondToken, response['executedQty'], response['cummulativeQuoteQty'], wantedPrice, price, response['transactTime'], response['status'], response['side'] === 'BUY')
+        const firstAmount = parseFloat(response['executedQty']) ?? 0
+        const secondAmount = parseFloat(response['cummulativeQuoteQty']) ?? 0
+        const price = parseFloat(response['price']) ?? 0
+        // const fills = response['fills'] ?? []
+        // for (const fill of fills){
+        //     const percentAmount = MathUtils.DivideNumbers(fill['qty'], fullAmount)
+        //     price = MathUtils.AddNumbers(price, MathUtils.MultiplyNumbers(percentAmount, fill['price']))
+        // }
+        return new BinanceTransactionModel('' + response['orderId'], firstToken, secondToken, '' + firstAmount, '' + secondAmount, wantedPrice, '' + price, response['transactTime'], response['status'], response['side'] === 'BUY')
     }
 
     static ToTradingTransaction(m: BinanceTransactionModel, augmentingTransaction: TradingTransactionModel = undefined) : TradingTransactionModel

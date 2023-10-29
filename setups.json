@@ -91,6 +91,9 @@
                     "hardLimitPercentage": 0.01
                 }
             },
+            "stopLoss": {
+                "percentage": 0.01
+            },
 
             "useLimitOrders": true,
             "limitOrderBuyOffset": -0.0001,

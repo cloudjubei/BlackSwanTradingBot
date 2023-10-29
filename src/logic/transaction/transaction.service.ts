@@ -117,14 +117,19 @@ export class TransactionService
     {
         let walletAmount = '0'
         let tradeAmount = '0'
+        let minAmount = '0'
         if (buy){
             walletAmount = this.walletFree.amounts[setup.config.secondToken] ?? '0'
-            tradeAmount =  MathUtils.IsGreaterThanOrEqualTo(setup.secondAmount, this.identityService.getMinAmounts()[setup.config.secondToken]) ? setup.secondAmount : '0' 
+            tradeAmount = setup.secondAmount
+            minAmount = this.identityService.getMinAmounts()[setup.config.secondToken]
+
         }else{
             walletAmount = this.walletFree.amounts[setup.config.firstToken] ?? '0'
-            tradeAmount =  MathUtils.IsGreaterThanOrEqualTo(setup.firstAmount, this.identityService.getMinAmounts()[setup.config.firstToken]) ? setup.firstAmount : '0' 
+            tradeAmount = setup.firstAmount
+            minAmount = this.identityService.getMinAmounts()[setup.config.firstToken]
         }
-        return MathUtils.Min(walletAmount, tradeAmount)
+        const possibleAmount = MathUtils.Min(walletAmount, tradeAmount)
+        return MathUtils.IsGreaterThanOrEqualTo(possibleAmount, minAmount) ? possibleAmount : '0'
     }
 
     private async makeTrade(setup: TradingSetupModel, amount: string, buy: boolean) : Promise<TradingTransactionModel | undefined>

@@ -65,12 +65,14 @@ export class TradingSetupModelUtils
         if (transaction.complete){
             delete t.openTransactions[transaction.transactionId]
             t.transactions.push(transaction)
+
+            if (transaction.canceled) { return t }
             
             //TODO: fix once trades are actually per order
             if (transaction.buy){
-                t.tradeEntryPriceAmount = t.currentPriceAmount
-                t.tradeLowestPriceAmount = t.currentPriceAmount
-                t.tradeHighestPriceAmount = t.currentPriceAmount
+                t.tradeEntryPriceAmount = transaction.priceAmount
+                t.tradeLowestPriceAmount = transaction.priceAmount
+                t.tradeHighestPriceAmount = transaction.priceAmount
             }
     
             if (transaction.buy){
@@ -121,7 +123,7 @@ export class TradingSetupModelUtils
                         return -1
                     }
                 }
-                const activationAmount = MathUtils.SubtractNumbers(t.tradeEntryPriceAmount, "" + (1.0 + takeProfit.percentage))
+                const activationAmount = MathUtils.MultiplyNumbers(t.tradeEntryPriceAmount, "" + (1.0 + takeProfit.percentage))
                 if (MathUtils.IsGreaterThanOrEqualTo(t.tradeHighestPriceAmount, activationAmount)){
                     const triggerAmount = MathUtils.MultiplyNumbers(t.tradeHighestPriceAmount, "" + (1.0 - trailingStop.deltaPercentage))
                     if (MathUtils.IsLessThanOrEqualTo(t.currentPriceAmount, triggerAmount)){
