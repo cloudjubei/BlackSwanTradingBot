@@ -31,8 +31,6 @@ export class TradingSetupsService
     {
         this.setups[tradingSetup.id] = tradingSetup
 
-        StorageUtils.createOrWriteToFile('.', 'setups.json', JSON.stringify(this.getAll()))
-        
         return tradingSetup
     }
 
@@ -51,8 +49,6 @@ export class TradingSetupsService
         }
         this.save(o)
 
-        StorageUtils.createOrWriteToFile('.', 'setups.json', JSON.stringify(this.getAll()))
-
         return o
     }
 
@@ -60,8 +56,6 @@ export class TradingSetupsService
     {
         const temp = this.setups[id]
         delete this.setups[id]
-
-        StorageUtils.createOrWriteToFile('.', 'setups.json', JSON.stringify(this.getAll()))
 
         return temp
     }

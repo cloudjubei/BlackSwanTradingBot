@@ -13,6 +13,7 @@ import SignalModel from "commons/models/signal/SignalModel.dto"
 import PriceModel from "commons/models/price/PriceModel.dto"
 import PriceKlineModel from 'commons/models/price/PriceKlineModel.dto'
 import { IdentityService } from 'logic/identity/identity.service'
+import StorageUtils from 'commons/lib/storageUtils'
 
 @Injectable()
 export class TradingService implements OnApplicationBootstrap
@@ -152,22 +153,27 @@ export class TradingService implements OnApplicationBootstrap
         }
     }
 
-    private updateSetups()
+    private async updateSetups()
     {
+        let hasUpdate = false
         const setups = this.tradingSetupsService.getAll()
         for(const setup of setups) {
-            this.updateSetup(setup)
+            hasUpdate = hasUpdate || await this.updateSetup(setup)
+        }
+
+        if (hasUpdate){
+            StorageUtils.createOrWriteToFile('.', 'setups.json', JSON.stringify(this.tradingSetupsService.getAll()))
         }
     }
 
-    private async updateSetup(setup: TradingSetupModel) : Promise<void>
+    private async updateSetup(setup: TradingSetupModel) : Promise<boolean>
     {
-        if (setup.status === TradingSetupStatusType.TERMINATED){ return }
+        if (setup.status === TradingSetupStatusType.TERMINATED){ return false }
 
-        if (!this.updatePrice(setup)) { return }
-        if (!await this.updateOpenTransactions(setup)) { return }
-        if (!await this.attemptAction(setup)) { return }
-        this.tradingSetupsService.save(setup)
+        if (!this.updatePrice(setup)) { return false }
+        if (!await this.updateOpenTransactions(setup)) { return false }
+        if (!await this.attemptAction(setup)) { return false }
+        return true
     }
 
     private updatePrice(setup: TradingSetupModel) : boolean
