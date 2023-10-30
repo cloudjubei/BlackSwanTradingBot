@@ -12,6 +12,7 @@ import MathUtils from "commons/lib/mathUtils"
 import SignalModel from "commons/models/signal/SignalModel.dto"
 import PriceModel from "commons/models/price/PriceModel.dto"
 import PriceKlineModel from 'commons/models/price/PriceKlineModel.dto'
+import { IdentityService } from 'logic/identity/identity.service'
 
 @Injectable()
 export class TradingService implements OnApplicationBootstrap
@@ -20,6 +21,7 @@ export class TradingService implements OnApplicationBootstrap
     isUpdating = false
 
     constructor(
+        private readonly identityService: IdentityService,
         private readonly websocketsService: WebsocketsService,
         private readonly transactionService: TransactionService,
         private readonly pricesService: PricesService,
@@ -222,9 +224,10 @@ export class TradingService implements OnApplicationBootstrap
     {
         let action = TradingSetupModelUtils.UpdateTermination(tradingSetup)
         if (action === 0){
-            action = TradingSetupModelUtils.UpdateTakeProfit(tradingSetup)
+            const minAmount = this.identityService.getMinAmounts()[tradingSetup.config.firstToken]
+            action = TradingSetupModelUtils.UpdateTakeProfit(tradingSetup, minAmount)
             if (action === 0){
-                action = TradingSetupModelUtils.UpdateStopLoss(tradingSetup)
+                action = TradingSetupModelUtils.UpdateStopLoss(tradingSetup, minAmount)
                 if (action === 0){
                     const tokenPair = TradingSetupConfigModelUtils.GetTokenPair(tradingSetup.config)
                     const interval = tradingSetup.config.interval

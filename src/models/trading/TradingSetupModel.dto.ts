@@ -108,9 +108,9 @@ export class TradingSetupModelUtils
         return 0
     }
 
-    static UpdateTakeProfit(t: TradingSetupModel) : number
+    static UpdateTakeProfit(t: TradingSetupModel, minAmount: string) : number
     {
-        if (MathUtils.IsZero(t.firstAmount)) { return 0 }
+        if (MathUtils.IsLessThan(t.firstAmount, minAmount)) { return 0 }
 
         const takeProfit = t.config.takeProfit
         if (takeProfit){
@@ -140,9 +140,9 @@ export class TradingSetupModelUtils
         return 0
     }
 
-    static UpdateStopLoss(t: TradingSetupModel) : number
+    static UpdateStopLoss(t: TradingSetupModel, minAmount: string) : number
     {
-        if (MathUtils.IsBiggerThanZero(t.firstAmount)) { return 0 }
+        if (MathUtils.IsLessThan(t.firstAmount, minAmount)) { return 0 }
         
         const stopLoss = t.config.stopLoss
         if (stopLoss){
