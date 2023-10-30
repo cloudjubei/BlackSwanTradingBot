@@ -82,7 +82,8 @@ export class TradingSetupModelUtils
                 t.firstAmount = MathUtils.SubtractNumbers(t.firstAmount, transaction.firstAmount)
                 t.secondAmount = MathUtils.AddNumbers(t.secondAmount, transaction.secondAmount)
             }
-            console.log('UpdateTransaction ' + t.config.firstToken + ': ', t.firstAmount, ' | ' + t.config.secondToken + ' : ', t.secondAmount, ' avgPrice: ', MathUtils.Shorten(transaction.priceAmount), ' vs currentPrice: ', MathUtils.Shorten(t.currentPriceAmount))
+            console.log('UpdateTransaction id: ' + t.id + (transaction.buy ? ' BUY ' : ' SELL ') + t.config.firstToken + ': ' + t.firstAmount, ' | ' + t.config.secondToken + ' : ' + t.secondAmount + ' avgPrice: ' + MathUtils.Shorten(transaction.priceAmount) + ' vs currentPrice: ' + MathUtils.Shorten(t.currentPriceAmount))
+            console.log('UpdateTransaction transaction: ' + t.config.firstToken + ': ' + transaction.firstAmount, ' | ' + t.config.secondToken + ' : ' + transaction.secondAmount + ' wantedPriceAmount: ' + MathUtils.Shorten(transaction.wantedPriceAmount))
         }else{
             t.openTransactions[transaction.transactionId] = transaction
         }
