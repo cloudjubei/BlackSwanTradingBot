@@ -13,6 +13,7 @@ export default class TradingSetupConfigModel
     stopLoss?: TradingStopLossConfigModel = undefined
 
     useLimitOrders: boolean = false
+    useLimitMakerOrders: boolean = false
     limitOrderBuyOffset: number = 0
     limitOrderSellOffset: number = 0
     limitOrderCancelDueToChecksElapsed: number = 10000

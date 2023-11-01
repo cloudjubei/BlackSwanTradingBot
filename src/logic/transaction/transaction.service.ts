@@ -141,7 +141,7 @@ export class TransactionService
             wantedPrice = this.getLimitPrice(setup, buy)
             const quantity = this.getLimitQuantity(amount, wantedPrice, buy)
             console.log("makeTrade LIMIT " + (buy ? "BUY" : "SELL") + " currentPrice: " + setup.currentPriceAmount + " wantedPrice: " + wantedPrice + " quantity: " + quantity + " for setup id: " + setup.id)
-            response = await this.makeLimitTransaction(TradingSetupConfigModelUtils.GetTokenPair(setup.config), quantity, wantedPrice, buy)
+            response = await this.makeLimitTransaction(TradingSetupConfigModelUtils.GetTokenPair(setup.config), quantity, wantedPrice, buy, setup.config.useLimitMakerOrders)
         }else{
             response = await this.makeMarketTransaction(TradingSetupConfigModelUtils.GetTokenPair(setup.config), amount, buy)
         }
@@ -182,15 +182,17 @@ export class TransactionService
         const quantity = buy ? MathUtils.DivideNumbers(amount, price) : amount
         return MathUtils.Shorten(quantity, 5)
     }
-    private async makeLimitTransaction(tokenPair: string, quantity: string, price: string, buy: boolean) : Promise<any | undefined>
+    private async makeLimitTransaction(tokenPair: string, quantity: string, price: string, buy: boolean, limitMaker: boolean = false) : Promise<any | undefined>
     {
         let parameters = {
             symbol: tokenPair,
-            type: 'LIMIT_MAKER',
+            type: limitMaker ? 'LIMIT_MAKER' : 'LIMIT',
             side: buy ? 'BUY' : 'SELL',
             quantity: Number(quantity),
-            price: Number(price),
-            // timeInForce: 'GTC'
+            price: Number(price)
+        }
+        if (!limitMaker){
+            parameters['timeInForce'] = 'GTC'
         }
         try{
             return await this.client.submitNewOrder(parameters as NewSpotOrderParams)

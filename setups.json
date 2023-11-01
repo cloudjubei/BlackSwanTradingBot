@@ -9,14 +9,7 @@
 
             "takeProfit": {
                 "percentage": 0.001
-            },
-
-            "useLimitOrders": true,
-            "limitOrderBuyOffset": -0.0001,
-            "limitOrderSellOffset": 0.0001,
-            "limitOrderCancelDueToChecksElapsed": 10000,
-            "limitOrderCancelDueToTimeElapsed": 60,
-            "limitOrderCancelDueToPriceDivergence": "50"
+            }
         },
         "startingFirstAmount": "0",
         "startingSecondAmount": "874",
@@ -96,6 +89,7 @@
             },
 
             "useLimitOrders": true,
+            "useLimitMakerOrders": true,
             "limitOrderBuyOffset": -0.0001,
             "limitOrderSellOffset": 0.0001,
             "limitOrderCancelDueToChecksElapsed": 10000,
