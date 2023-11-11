@@ -26,6 +26,18 @@ export class TransactionController
         return await this.transactionService.getWalletLocked()
     }
 
+    @Get('walletMargin/free')
+    async getWalletMarginFree() : Promise<WalletModel>
+    {
+        return await this.transactionService.getWalletMarginFree()
+    }
+
+    @Get('walletMargin/locked')
+    async getWalletMarginLocked() : Promise<WalletModel>
+    {
+        return await this.transactionService.getWalletMarginLocked()
+    }
+
     @Post('convertAllBTC')
     async convertAllBTC() : Promise<WalletModel>
     {

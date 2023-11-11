@@ -19,6 +19,8 @@ export default class TradingSetupConfigModel
     limitOrderCancelDueToChecksElapsed: number = 10000
     limitOrderCancelDueToTimeElapsed?: number = undefined
     limitOrderCancelDueToPriceDivergence?: string = undefined
+
+    isMarginAccount: boolean = false
 }
 
 export class TradingSetupConfigModelUtils

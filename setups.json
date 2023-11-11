@@ -94,7 +94,9 @@
             "limitOrderSellOffset": 0.0001,
             "limitOrderCancelDueToChecksElapsed": 10000,
             "limitOrderCancelDueToTimeElapsed": 60,
-            "limitOrderCancelDueToPriceDivergence": "50"
+            "limitOrderCancelDueToPriceDivergence": "50",
+
+            "isMarginAccount": true
         },
         "startingFirstAmount": "0",
         "startingSecondAmount": "1000",

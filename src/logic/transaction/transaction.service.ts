@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common'
 import TradingSetupModel from 'models/trading/TradingSetupModel.dto'
 import TradingTransactionModel, { TradingTransactionModelUtils } from 'models/trading/transaction/TradingTransactionModel.dto'
-import { MainClient, NewSpotOrderParams } from 'binance'
+import { MainClient, NewSpotOrderParams, SpotAssetBalance } from 'binance'
 import { TradingSetupConfigModelUtils } from 'models/trading/TradingSetupConfigModel.dto'
-import BinanceTransactionModel, { BinanceTransactionModelUtils } from 'models/trading/transaction/BinanceTransactionModel.dto'
+import { BinanceTransactionModelUtils } from 'models/trading/transaction/BinanceTransactionModel.dto'
 import MathUtils from "commons/lib/mathUtils"
 import ArrayUtils from "commons/lib/arrayUtils"
 import { IdentityService } from 'logic/identity/identity.service'
@@ -15,6 +15,8 @@ export class TransactionService
     private client : MainClient
     private walletFree = new WalletModel()
     private walletLocked = new WalletModel()
+    private walletMarginFree = new WalletModel()
+    private walletMarginLocked = new WalletModel()
 
     constructor(
         private readonly identityService: IdentityService,
@@ -24,6 +26,8 @@ export class TransactionService
         for(const token of Object.keys(config.minimum_amounts)){
             this.walletFree.amounts[token] = '0'
             this.walletLocked.amounts[token] = '0'
+            this.walletMarginFree.amounts[token] = '0'
+            this.walletMarginLocked.amounts[token] = '0'
         }
     }
 
@@ -35,6 +39,16 @@ export class TransactionService
     getWalletLocked() : WalletModel
     {
         return this.walletLocked
+    }
+
+    async getWalletMarginFree() : Promise<WalletModel>
+    {
+        await this.updateMarginWalletBalances()
+        return this.walletMarginFree
+    }
+    getWalletMarginLocked() : WalletModel
+    {
+        return this.walletMarginLocked
     }
     async convertAllBTC() : Promise<WalletModel>
     {
@@ -71,6 +85,7 @@ export class TransactionService
         //     lastUpdateTimestamp: Date.now()
         // })
         await this.updateWalletBalances(false)
+        await this.updateMarginWalletBalances(false)
     }
 
     async updateTransaction(setup: TradingSetupModel, transaction: TradingTransactionModel) : Promise<TradingTransactionModel>
@@ -119,12 +134,12 @@ export class TransactionService
         let tradeAmount = '0'
         let minAmount = '0'
         if (buy){
-            walletAmount = this.walletFree.amounts[setup.config.secondToken] ?? '0'
+            walletAmount = (setup.config.isMarginAccount ? this.walletMarginFree.amounts[setup.config.secondToken] : this.walletFree.amounts[setup.config.secondToken]) ?? '0'
             tradeAmount = setup.secondAmount
             minAmount = this.identityService.getMinAmounts()[setup.config.secondToken]
 
         }else{
-            walletAmount = this.walletFree.amounts[setup.config.firstToken] ?? '0'
+            walletAmount = (setup.config.isMarginAccount ? this.walletMarginFree.amounts[setup.config.firstToken] : this.walletFree.amounts[setup.config.firstToken]) ?? '0'
             tradeAmount = setup.firstAmount
             minAmount = this.identityService.getMinAmounts()[setup.config.firstToken]
         }
@@ -141,9 +156,9 @@ export class TransactionService
             wantedPrice = this.getLimitPrice(setup, buy)
             const quantity = this.getLimitQuantity(amount, wantedPrice, buy)
             console.log("makeTrade LIMIT " + (buy ? "BUY" : "SELL") + " currentPrice: " + setup.currentPriceAmount + " wantedPrice: " + wantedPrice + " quantity: " + quantity + " for setup id: " + setup.id)
-            response = await this.makeLimitTransaction(TradingSetupConfigModelUtils.GetTokenPair(setup.config), quantity, wantedPrice, buy, setup.config.useLimitMakerOrders)
+            response = await this.makeLimitTransaction(TradingSetupConfigModelUtils.GetTokenPair(setup.config), quantity, wantedPrice, buy, setup.config.useLimitMakerOrders, setup.config.isMarginAccount)
         }else{
-            response = await this.makeMarketTransaction(TradingSetupConfigModelUtils.GetTokenPair(setup.config), amount, buy)
+            response = await this.makeMarketTransaction(TradingSetupConfigModelUtils.GetTokenPair(setup.config), amount, buy, setup.config.isMarginAccount)
         }
         
         if (response){
@@ -153,7 +168,7 @@ export class TransactionService
         }
     }
 
-    private async makeMarketTransaction(tokenPair: string, quantity: string, buy: boolean) : Promise<any | undefined>
+    private async makeMarketTransaction(tokenPair: string, quantity: string, buy: boolean, isMargin: boolean = false) : Promise<any | undefined>
     {
         let parameters = {
             symbol: tokenPair,
@@ -166,6 +181,9 @@ export class TransactionService
             parameters['quantity'] = Number(quantity)
         }
         try{
+            if (isMargin){
+                return await this.client.marginAccountNewOrder(parameters as NewSpotOrderParams)
+            }
             return await this.client.submitNewOrder(parameters as NewSpotOrderParams)
         }catch(e){
             console.error("binance market transaction error: ", e)
@@ -182,7 +200,7 @@ export class TransactionService
         const quantity = buy ? MathUtils.DivideNumbers(amount, price) : amount
         return MathUtils.Shorten(quantity, 5)
     }
-    private async makeLimitTransaction(tokenPair: string, quantity: string, price: string, buy: boolean, limitMaker: boolean = false) : Promise<any | undefined>
+    private async makeLimitTransaction(tokenPair: string, quantity: string, price: string, buy: boolean, limitMaker: boolean = false, isMargin: boolean = false) : Promise<any | undefined>
     {
         let parameters = {
             symbol: tokenPair,
@@ -195,6 +213,9 @@ export class TransactionService
             parameters['timeInForce'] = 'GTC'
         }
         try{
+            if (isMargin){
+                return await this.client.marginAccountNewOrder(parameters as NewSpotOrderParams)
+            }
             return await this.client.submitNewOrder(parameters as NewSpotOrderParams)
         }catch(e){
             console.error("binance market transaction error: ", e?.body)
@@ -215,14 +236,45 @@ export class TransactionService
             console.error('getAccountInformation error: ', err);
         })
     }
+    private async updateMarginWalletBalances(walletOnly: boolean = true)
+    {
+        await this.client
+        .getIsolatedMarginAccountInfo()
+        .then((result) => {
+            if (!walletOnly){
+                console.log('getAllMarginAssets result: ', result)
+            }
+            
+            for(const token of Object.keys(this.walletMarginFree.amounts)){
+                this.walletMarginFree.amounts[token] = '0'
+                this.walletMarginLocked.amounts[token] = '0'
+            }
 
-    private setupWallet(balances: Array<any>, walletOnly: boolean = true)
+            for(const r of result.assets){
+                const token = r.baseAsset.asset
+                if (this.walletMarginFree.amounts[token] !== undefined){
+                    this.walletMarginFree.amounts[token] = MathUtils.AddNumbers(this.walletMarginFree.amounts[token], "" + r.baseAsset.free)
+                    this.walletMarginLocked.amounts[token] = MathUtils.AddNumbers(this.walletMarginLocked.amounts[token], "" + r.baseAsset.locked)
+                }
+                const token2 = r.quoteAsset.asset
+                if (this.walletMarginFree.amounts[token2] !== undefined){
+                    this.walletMarginFree.amounts[token2] = MathUtils.AddNumbers(this.walletMarginFree.amounts[token2], "" + r.baseAsset.free)
+                    this.walletMarginLocked.amounts[token2] = MathUtils.AddNumbers(this.walletMarginLocked.amounts[token2], "" + r.baseAsset.locked)
+                }
+            }
+        })
+        .catch((err) => {
+            console.error('getAllMarginAssets error: ', err);
+        })
+    }
+
+    private setupWallet(balances: SpotAssetBalance[], walletOnly: boolean = true)
     {
         for (const b of balances){
-            const token = b['asset']
+            const token = b.asset
             if (this.walletFree.amounts[token] !== undefined){
-                this.walletFree.amounts[token] = b['free']
-                this.walletLocked.amounts[token] = b['locked']
+                this.walletFree.amounts[token] = "" + b.free
+                this.walletLocked.amounts[token] = "" + b.locked
             }
         }
 
