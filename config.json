@@ -2,7 +2,8 @@
     "minimum_amounts": {
         "BTC": "0.001",
         "USDT": "10.0",
-        "FDUSD": "10.0"
+        "FDUSD": "10.0",
+        "XRP": "50.0"
     },
     "default_host" : "http://52.29.230.39",
     "socket_timeout" : 1000,
@@ -11,6 +12,9 @@
             "port": 3002
         },
         "BTCFDUSD": {
+            "port": 3002
+        },
+        "XRPUSDT": {
             "port": 3002
         }
     },
