@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import TradingSetupModel from 'models/trading/TradingSetupModel.dto'
 import TradingTransactionModel, { TradingTransactionModelUtils } from 'models/trading/transaction/TradingTransactionModel.dto'
-import { MainClient, NewSpotOrderParams, SpotAssetBalance } from 'binance'
+import { CancelSpotOrderResult, MainClient, NewSpotOrderParams, SpotAssetBalance } from 'binance'
 import { TradingSetupConfigModelUtils } from 'models/trading/TradingSetupConfigModel.dto'
 import { BinanceTransactionModelUtils } from 'models/trading/transaction/BinanceTransactionModel.dto'
 import MathUtils from "commons/lib/mathUtils"
@@ -96,7 +96,7 @@ export class TransactionService
                 const newTransaction = this.processBinanceResponse(setup, transaction.wantedPriceAmount, response, transaction)
 
                 if (this.shouldCancel(setup, newTransaction)){
-                    return this.client.cancelOrder({  symbol: TradingTransactionModelUtils.GetTokenPair(transaction), orderId: Number(transaction.transactionId) })
+                    return this.cancelOrder(setup, transaction)
                     .then(response => {
                         return this.processBinanceResponse(setup, newTransaction.wantedPriceAmount, response, newTransaction)
                     }).catch(e => {
@@ -115,6 +115,16 @@ export class TransactionService
         }
         return transaction
     }
+
+    private async cancelOrder(setup: TradingSetupModel, transaction: TradingTransactionModel) : Promise<CancelSpotOrderResult>
+    {
+        if (setup.config.isMarginAccount){
+            return this.client.marginAccountCancelOrder({ symbol: TradingTransactionModelUtils.GetTokenPair(transaction), orderId: Number(transaction.transactionId) })
+        }else{
+            return this.client.cancelOrder({  symbol: TradingTransactionModelUtils.GetTokenPair(transaction), orderId: Number(transaction.transactionId) })
+        }
+    }
+
     
     async makeTransaction(setup: TradingSetupModel, action: number) : Promise<TradingTransactionModel> | undefined
     {
@@ -238,6 +248,13 @@ export class TransactionService
     }
     private async updateMarginWalletBalances(walletOnly: boolean = true)
     {
+        await this.client.getSubAccountList().then((result) => { 
+            console.log('getSubAccountList result: ', result)
+        })
+        await this.client.queryCrossMarginAccountDetails().then((result) => {
+            console.log('queryCrossMarginAccountDetails result: ', result)
+        })
+
         await this.client
         .getIsolatedMarginAccountInfo()
         .then((result) => {
