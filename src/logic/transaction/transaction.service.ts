@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import TradingSetupModel from 'models/trading/TradingSetupModel.dto'
 import TradingTransactionModel, { TradingTransactionModelUtils } from 'models/trading/transaction/TradingTransactionModel.dto'
-import { CancelSpotOrderResult, MainClient, NewSpotOrderParams, SpotAssetBalance } from 'binance'
+import { CancelSpotOrderResult, MainClient, NewSpotOrderParams, SpotAssetBalance, SpotOrder } from 'binance'
 import { TradingSetupConfigModelUtils } from 'models/trading/TradingSetupConfigModel.dto'
 import { BinanceTransactionModelUtils } from 'models/trading/transaction/BinanceTransactionModel.dto'
 import MathUtils from "commons/lib/mathUtils"
@@ -91,7 +91,7 @@ export class TransactionService
     async updateTransaction(setup: TradingSetupModel, transaction: TradingTransactionModel) : Promise<TradingTransactionModel>
     {
         if (!transaction.complete){
-            return this.client.getOrder({  symbol: TradingTransactionModelUtils.GetTokenPair(transaction), orderId: Number(transaction.transactionId) })
+            return this.getOrder(setup, transaction)
             .then(response => {
                 const newTransaction = this.processBinanceResponse(setup, transaction.wantedPriceAmount, response, transaction)
 
@@ -116,13 +116,21 @@ export class TransactionService
         return transaction
     }
 
+    private async getOrder(setup: TradingSetupModel, transaction: TradingTransactionModel) : Promise<SpotOrder>
+    {
+        if (setup.config.isMarginAccount){
+            return this.client.queryMarginAccountOrder({ symbol: TradingTransactionModelUtils.GetTokenPair(transaction), orderId: Number(transaction.transactionId) })
+        }
+        return this.client.getOrder({  symbol: TradingTransactionModelUtils.GetTokenPair(transaction), orderId: Number(transaction.transactionId) })
+    }
+
+
     private async cancelOrder(setup: TradingSetupModel, transaction: TradingTransactionModel) : Promise<CancelSpotOrderResult>
     {
         if (setup.config.isMarginAccount){
             return this.client.marginAccountCancelOrder({ symbol: TradingTransactionModelUtils.GetTokenPair(transaction), orderId: Number(transaction.transactionId) })
-        }else{
-            return this.client.cancelOrder({  symbol: TradingTransactionModelUtils.GetTokenPair(transaction), orderId: Number(transaction.transactionId) })
         }
+        return this.client.cancelOrder({  symbol: TradingTransactionModelUtils.GetTokenPair(transaction), orderId: Number(transaction.transactionId) })
     }
 
     
