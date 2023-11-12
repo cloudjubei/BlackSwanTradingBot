@@ -249,39 +249,25 @@ export class TransactionService
     private async updateMarginWalletBalances(walletOnly: boolean = true)
     {
         await this.client.queryCrossMarginAccountDetails().then((result) => {
-            console.log('queryCrossMarginAccountDetails result: ', result)
-        })
-        .catch((err) => {
-            console.error('queryCrossMarginAccountDetails error: ', err);
-        })
-
-        await this.client
-        .getIsolatedMarginAccountInfo()
-        .then((result) => {
             if (!walletOnly){
                 console.log('getAllMarginAssets result: ', result)
             }
-            
+
             for(const token of Object.keys(this.walletMarginFree.amounts)){
                 this.walletMarginFree.amounts[token] = '0'
                 this.walletMarginLocked.amounts[token] = '0'
             }
 
-            for(const r of result.assets){
-                const token = r.baseAsset.asset
+            for(const r of result.userAssets){
+                const token = r.asset
                 if (this.walletMarginFree.amounts[token] !== undefined){
-                    this.walletMarginFree.amounts[token] = MathUtils.AddNumbers(this.walletMarginFree.amounts[token], "" + r.baseAsset.free)
-                    this.walletMarginLocked.amounts[token] = MathUtils.AddNumbers(this.walletMarginLocked.amounts[token], "" + r.baseAsset.locked)
-                }
-                const token2 = r.quoteAsset.asset
-                if (this.walletMarginFree.amounts[token2] !== undefined){
-                    this.walletMarginFree.amounts[token2] = MathUtils.AddNumbers(this.walletMarginFree.amounts[token2], "" + r.baseAsset.free)
-                    this.walletMarginLocked.amounts[token2] = MathUtils.AddNumbers(this.walletMarginLocked.amounts[token2], "" + r.baseAsset.locked)
+                    this.walletMarginFree.amounts[token] = MathUtils.AddNumbers(this.walletMarginFree.amounts[token], "" + r.free)
+                    this.walletMarginLocked.amounts[token] = MathUtils.AddNumbers(this.walletMarginLocked.amounts[token], "" + r.locked)
                 }
             }
         })
         .catch((err) => {
-            console.error('getAllMarginAssets error: ', err);
+            console.error('queryCrossMarginAccountDetails error: ', err);
         })
     }
 
