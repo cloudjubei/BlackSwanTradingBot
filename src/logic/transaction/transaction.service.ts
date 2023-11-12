@@ -248,11 +248,11 @@ export class TransactionService
     }
     private async updateMarginWalletBalances(walletOnly: boolean = true)
     {
-        await this.client.getSubAccountList().then((result) => { 
-            console.log('getSubAccountList result: ', result)
-        })
         await this.client.queryCrossMarginAccountDetails().then((result) => {
             console.log('queryCrossMarginAccountDetails result: ', result)
+        })
+        .catch((err) => {
+            console.error('queryCrossMarginAccountDetails error: ', err);
         })
 
         await this.client
