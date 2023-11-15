@@ -19,7 +19,7 @@ export default class TradingSetupModel
     @ApiProperty() firstAmount: string
     @ApiProperty() secondAmount: string
 
-    @ApiProperty(Timestamp) lastUpdate: number = Date.now()
+    @ApiProperty(Timestamp) timeoutTimestamp: number = 0
 
     @ApiProperty() currentPriceAmount: string = "0"
     @ApiProperty() lowestPriceAmount: string = "99999999999"

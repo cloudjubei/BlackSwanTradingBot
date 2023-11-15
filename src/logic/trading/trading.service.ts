@@ -172,6 +172,7 @@ export class TradingService implements OnApplicationBootstrap
 
         if (!this.updatePrice(setup)) { return false }
         if (!await this.updateOpenTransactions(setup)) { return false }
+        if (setup.timeoutTimestamp > Date.now()) { return false }
         if (!await this.attemptAction(setup)) { return false }
         return true
     }
@@ -239,6 +240,8 @@ export class TradingService implements OnApplicationBootstrap
                     const interval = tradingSetup.config.interval
                     const signal = this.signalsService.getFromCache(tradingSetup.config.signal, tokenPair, interval)
                     action = TradingSetupModelUtils.UpdateSignal(tradingSetup, signal)
+                }else{
+                    tradingSetup.timeoutTimestamp = Date.now() + (tradingSetup.config.stopLoss?.timeout ?? 0)
                 }
             }
         }
