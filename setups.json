@@ -21,12 +21,10 @@
         "lowestPriceAmount": "99999999999",
         "highestPriceAmount": "0",
 
-        "tradeEntryPriceAmount": "0",
-        "tradeLowestPriceAmount": "99999999999",
-        "tradeHighestPriceAmount": "0",
+        "currentAction": { "type": "MANUAL", "action": 0 },
 
-        "transactions": [],
-        "openTransactions": {},
+        "openTrades": [],
+        "finishedTrades": [],
         "failedDueToMarketMaking": 0
     },
     {
@@ -61,12 +59,10 @@
         "lowestPriceAmount": "99999999999",
         "highestPriceAmount": "0",
 
-        "tradeEntryPriceAmount": "0",
-        "tradeLowestPriceAmount": "99999999999",
-        "tradeHighestPriceAmount": "0",
+        "currentAction": { "type": "MANUAL", "action": 0 },
 
-        "transactions": [],
-        "openTransactions": {},
+        "openTrades": [],
+        "finishedTrades": [],
         "failedDueToMarketMaking": 0
     },
     {
@@ -85,7 +81,8 @@
                 }
             },
             "stopLoss": {
-                "percentage": 0.01
+                "percentage": 0.01,
+                "timeout": 60
             },
 
             "useLimitOrders": true,
@@ -94,9 +91,7 @@
             "limitOrderSellOffset": 0.0001,
             "limitOrderCancelDueToChecksElapsed": 10000,
             "limitOrderCancelDueToTimeElapsed": 60,
-            "limitOrderCancelDueToPriceDivergence": "50",
-
-            "isMarginAccount": true
+            "limitOrderCancelDueToPriceDivergence": "50"
         },
         "startingFirstAmount": "0",
         "startingSecondAmount": "1000",
@@ -108,12 +103,10 @@
         "lowestPriceAmount": "99999999999",
         "highestPriceAmount": "0",
 
-        "tradeEntryPriceAmount": "0",
-        "tradeLowestPriceAmount": "99999999999",
-        "tradeHighestPriceAmount": "0",
+        "currentAction": { "type": "MANUAL", "action": 0 },
 
-        "transactions": [],
-        "openTransactions": {},
+        "openTrades": [],
+        "finishedTrades": [],
         "failedDueToMarketMaking": 0
     }
 ]

@@ -3,12 +3,11 @@ import TradingSetupModel from 'models/trading/TradingSetupModel.dto'
 import TradingTransactionModel, { TradingTransactionModelUtils } from 'models/trading/transaction/TradingTransactionModel.dto'
 import { CancelSpotOrderResult, MainClient, NewSpotOrderParams, SpotAssetBalance, SpotOrder } from 'binance'
 import { TradingSetupConfigModelUtils } from 'models/trading/TradingSetupConfigModel.dto'
-import { BinanceTransactionModelUtils } from 'models/trading/transaction/BinanceTransactionModel.dto'
 import MathUtils from "commons/lib/mathUtils"
 import ArrayUtils from "commons/lib/arrayUtils"
 import { IdentityService } from 'logic/identity/identity.service'
 import WalletModel from 'models/WalletModel.dto'
-import TradingSetupActionModel, { TradingSetupActionModelUtils } from 'models/trading/TradingSetupActionModel.dto'
+import TradingSetupActionModel, { TradingSetupActionModelUtils } from 'models/trading/action/TradingSetupActionModel.dto'
 
 @Injectable()
 export class TransactionService
@@ -94,21 +93,21 @@ export class TransactionService
         if (!transaction.complete){
             return this.getOrder(setup, transaction)
             .then(response => {
-                const newTransaction = this.processBinanceResponse(setup, transaction.wantedPriceAmount, response, transaction)
+                const newTransaction =  TradingTransactionModelUtils.FromBinanceResponse(setup.config.firstToken, setup.config.secondToken, transaction.offeredAmount, transaction.wantedPriceAmount, response, transaction)
 
                 if (this.shouldCancel(setup, newTransaction)){
                     return this.cancelOrder(setup, transaction)
                     .then(response => {
-                        return this.processBinanceResponse(setup, newTransaction.wantedPriceAmount, response, newTransaction)
+                        return TradingTransactionModelUtils.FromBinanceResponse(setup.config.firstToken, setup.config.secondToken, transaction.offeredAmount, transaction.wantedPriceAmount, response, newTransaction)
                     }).catch(e => {
                         if (e.code === -2011){
                             console.log("CANCEL ERROR UNKNOWN ORDER")
-                            transaction.complete = true
-                            transaction.canceled = true
-                            return transaction
                         }
                         console.log("CANCEL ERROR: ")
                         console.log(e)
+                        transaction.complete = true
+                        transaction.canceled = true
+                        return transaction
                     }) 
                 }
                 return newTransaction
@@ -134,6 +133,15 @@ export class TransactionService
         return this.client.cancelOrder({  symbol: TradingTransactionModelUtils.GetTokenPair(transaction), orderId: Number(transaction.transactionId) })
     }
 
+    canMakeTransaction(setup: TradingSetupModel, action: TradingSetupActionModel) : boolean
+    {
+        if (TradingSetupActionModelUtils.IsNoOp(action)) { return false }
+
+        const buy = TradingSetupActionModelUtils.IsBuy(action)
+        const tradeAmount = this.getTradeAmount(setup, buy)
+
+        return MathUtils.IsBiggerThanZero(tradeAmount)
+    }
     
     async makeTransaction(setup: TradingSetupModel, action: TradingSetupActionModel) : Promise<TradingTransactionModel> | undefined
     {
@@ -181,7 +189,7 @@ export class TransactionService
         }
         
         if (response){
-            return this.processBinanceResponse(setup, wantedPrice, response)
+            return TradingTransactionModelUtils.FromBinanceResponse(setup.config.firstToken, setup.config.secondToken, amount, wantedPrice, response)
         }else{
             setup.failedDueToMarketMaking += 1
         }
@@ -334,11 +342,5 @@ export class TransactionService
             }
         }
         return false
-    }
-
-    private processBinanceResponse(setup: TradingSetupModel, wantedPrice: string, response: any, transaction?: TradingTransactionModel)
-    {
-        const binanceTransaction = BinanceTransactionModelUtils.FromResponse(setup.config.firstToken, setup.config.secondToken, wantedPrice, response)
-        return BinanceTransactionModelUtils.ToTradingTransaction(binanceTransaction, transaction)
     }
 }

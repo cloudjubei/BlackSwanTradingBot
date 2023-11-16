@@ -14,7 +14,11 @@ import PriceModel from "commons/models/price/PriceModel.dto"
 import PriceKlineModel from 'commons/models/price/PriceKlineModel.dto'
 import { IdentityService } from 'logic/identity/identity.service'
 import StorageUtils from 'commons/lib/storageUtils'
-import TradingSetupActionModel, { TradingSetupActionModelUtils } from 'models/trading/TradingSetupActionModel.dto'
+import TradingSetupActionModel, { TradingSetupActionModelUtils } from 'models/trading/action/TradingSetupActionModel.dto'
+import TradingSetupTradeModel, { TradingSetupTradeModelUtils } from 'models/trading/trade/TradingSetupTradeModel.dto'
+import TradingSetupActionType from 'models/trading/action/TradingSetupActionType.dto'
+import TradingSetupTradeTransactionStatus from 'models/trading/trade/TradingSetupTradeTransactionStatus.dto'
+import ArrayUtils from 'commons/lib/arrayUtils'
 
 @Injectable()
 export class TradingService implements OnApplicationBootstrap
@@ -157,7 +161,7 @@ export class TradingService implements OnApplicationBootstrap
     private async updateSetups()
     {
         let hasUpdate = false
-        const setups = this.tradingSetupsService.getAll()
+        const setups = this.tradingSetupsService.getAllNonTerminated()
         for(const setup of setups) {
             hasUpdate = hasUpdate || await this.updateSetup(setup)
         }
@@ -170,12 +174,27 @@ export class TradingService implements OnApplicationBootstrap
     private async updateSetup(setup: TradingSetupModel) : Promise<boolean>
     {
         if (setup.status === TradingSetupStatusType.TERMINATED){ return false }
-
         if (!this.updatePrice(setup)) { return false }
-        if (!await this.updateOpenTransactions(setup)) { return false }
+
+        TradingSetupModelUtils.UpdateTerminating(setup)
+
+        setup.currentAction = this.getAction(setup)
+
+        const tradesComplete = []
+        for(const t of setup.openTrades){
+            await this.updateOpenTrade(setup, t)
+            if (t.status === TradingSetupTradeTransactionStatus.COMPLETE){
+                tradesComplete.push(t)
+            }
+        }
+        for(const t of tradesComplete){
+            setup.openTrades = ArrayUtils.RemoveElement(setup.openTrades, t)
+            setup.finishedTrades.push(t)
+        }
+        
+        if (TradingSetupModelUtils.UpdateTermination(setup)){ return false }
         if (setup.timeoutTimestamp > Date.now()) { return false }
-        if (!await this.attemptAction(setup)) { return false }
-        return true
+        return await this.attemptNewAction(setup)
     }
 
     private updatePrice(setup: TradingSetupModel) : boolean
@@ -192,60 +211,92 @@ export class TradingService implements OnApplicationBootstrap
         return false
     }
 
-    private async updateOpenTransactions(setup: TradingSetupModel) : Promise<boolean>
+    private async updateOpenTrade(tradingSetup: TradingSetupModel, trade: TradingSetupTradeModel)
     {
-        let hasNoTransactionsOpen = true
-        const openTransactions = Object.values(setup.openTransactions)
-        for(const t of openTransactions){
+        if (trade.status === TradingSetupTradeTransactionStatus.BUY_PENDING){
             try{
-                const newT = await this.transactionService.updateTransaction(setup, t)
-                if (newT){
-                    hasNoTransactionsOpen = false
-                    TradingSetupModelUtils.UpdateTransaction(setup, newT)
-                }
+                const newTransaction = await this.transactionService.updateTransaction(tradingSetup, trade.buyTransaction)
+                TradingSetupTradeModelUtils.UpdateBuyTransaction(trade, tradingSetup, newTransaction)
             }catch(e){
-                hasNoTransactionsOpen = false
-                console.error("updateOpenTransactions error: " + JSON.stringify(e))
+                console.error("updateOpenTrade BUY_PENDING error: " + JSON.stringify(e))
+            }
+            return
+        }else if (trade.status === TradingSetupTradeTransactionStatus.BUY_DONE){
+            let action = new TradingSetupActionModel(TradingSetupActionType.MANUAL)
+
+            if (tradingSetup.status === TradingSetupStatusType.TERMINATING){
+                action = new TradingSetupActionModel(TradingSetupActionType.TERMINATION, -1)
+            }
+    
+            if (!TradingSetupActionModelUtils.IsNoOp(action)){
+                const minAmount = this.identityService.getMinAmounts()[tradingSetup.config.firstToken]
+                action = TradingSetupTradeModelUtils.UpdateTakeProfit(trade, tradingSetup, minAmount)
+                if (!TradingSetupActionModelUtils.IsNoOp(action)){
+                    action = TradingSetupTradeModelUtils.UpdateStopLoss(trade, tradingSetup, minAmount)
+                    if (!TradingSetupActionModelUtils.IsNoOp(action)){
+                        action = tradingSetup.currentAction
+                    }else{
+                        tradingSetup.timeoutTimestamp = Date.now() + (tradingSetup.config.stopLoss?.timeout ?? 0)
+                    }
+                }
+            }
+            trade.currentAction = action
+            if (TradingSetupActionModelUtils.IsSell(action)){
+                const transaction = await this.transactionService.makeTransaction(tradingSetup, action)
+                if (transaction){
+                    trade.sellTransactions.push(transaction)
+                    TradingSetupTradeModelUtils.UpdateSellTransaction(trade, tradingSetup, transaction)
+                }
+            }
+        }else if (trade.status === TradingSetupTradeTransactionStatus.SELL_PENDING){
+            for(const sellTransaction of trade.sellTransactions){
+                if (!sellTransaction.complete){
+                    try{
+                        const newTransaction = await this.transactionService.updateTransaction(tradingSetup, sellTransaction)
+                        TradingSetupTradeModelUtils.UpdateSellTransaction(trade, tradingSetup, newTransaction)
+                    }catch(e){
+                        console.error("updateOpenTrade SELL_PENDING error: " + JSON.stringify(e))
+                    }
+                }
+            }
+            TradingSetupTradeModelUtils.UpdateSellTransactionsStatus(trade)
+        }
+        if (trade.status === TradingSetupTradeTransactionStatus.SELL_PARTIALLY_DONE){
+            const transaction = await this.transactionService.makeTransaction(tradingSetup, trade.currentAction)
+            if (transaction){
+                trade.sellTransactions.push(transaction)
+                TradingSetupTradeModelUtils.UpdateSellTransaction(trade, tradingSetup, transaction)
+            }else if (!this.transactionService.canMakeTransaction(tradingSetup, trade.currentAction)){
+                //failing to make the transaction due to not enough funds left -> releasing
+                tradingSetup.firstAmount = MathUtils.AddNumbers(tradingSetup.firstAmount, trade.firstAmount)
+                tradingSetup.secondAmount = MathUtils.AddNumbers(tradingSetup.secondAmount, trade.secondAmount)
+                trade.status = TradingSetupTradeTransactionStatus.COMPLETE
             }
         }
-        return hasNoTransactionsOpen
     }
 
-    private async attemptAction(setup: TradingSetupModel) : Promise<boolean>
+    private async attemptNewAction(setup: TradingSetupModel) : Promise<boolean>
     {
         if (!MathUtils.IsBiggerThanZero(setup.currentPriceAmount)){ return false }
-        if (Object.keys(setup.openTransactions).length > 0) { return false }
+        if (!setup.currentAction){ return false }
 
-        const action = this.updateAction(setup)
-            
-        if (!TradingSetupActionModelUtils.IsNoOp(action)){
-            const transaction = await this.transactionService.makeTransaction(setup, action)
+        if (TradingSetupActionModelUtils.IsBuy(setup.currentAction)){
+            const transaction = await this.transactionService.makeTransaction(setup, setup.currentAction)
             if (transaction){
-                TradingSetupModelUtils.UpdateTransaction(setup, transaction)
+                TradingSetupModelUtils.CreateBuyTrade(setup, transaction)
                 return true
             }
         }
         return false
     }
 
-    private updateAction(tradingSetup: TradingSetupModel) : TradingSetupActionModel
+    private getAction(tradingSetup: TradingSetupModel) : TradingSetupActionModel
     {
-        let action = TradingSetupModelUtils.UpdateTermination(tradingSetup)
-        if (!TradingSetupActionModelUtils.IsNoOp(action)){
-            const minAmount = this.identityService.getMinAmounts()[tradingSetup.config.firstToken]
-            action = TradingSetupModelUtils.UpdateTakeProfit(tradingSetup, minAmount)
-            if (!TradingSetupActionModelUtils.IsNoOp(action)){
-                action = TradingSetupModelUtils.UpdateStopLoss(tradingSetup, minAmount)
-                if (!TradingSetupActionModelUtils.IsNoOp(action)){
-                    const tokenPair = TradingSetupConfigModelUtils.GetTokenPair(tradingSetup.config)
-                    const interval = tradingSetup.config.interval
-                    const signal = this.signalsService.getFromCache(tradingSetup.config.signal, tokenPair, interval)
-                    action = TradingSetupModelUtils.UpdateSignal(tradingSetup, signal)
-                }else{
-                    tradingSetup.timeoutTimestamp = Date.now() + (tradingSetup.config.stopLoss?.timeout ?? 0)
-                }
-            }
-        }
-        return action
+        const signalProvider = tradingSetup.config.signal
+        const tokenPair = TradingSetupConfigModelUtils.GetTokenPair(tradingSetup.config)
+        const interval = tradingSetup.config.interval
+        const signal = this.signalsService.getFromCache(signalProvider, tokenPair, interval)
+
+        return new TradingSetupActionModel(TradingSetupActionType.SIGNAL, signal.action * signal.certainty)
     }
 }

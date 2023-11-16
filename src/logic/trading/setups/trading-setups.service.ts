@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common'
 import TradingSetupConfigModel from 'models/trading/TradingSetupConfigModel.dto'
 import TradingSetupModel from 'models/trading/TradingSetupModel.dto'
 import StorageUtils from "commons/lib/storageUtils"
+import TradingSetupStatusType from 'models/trading/TradingSetupStatusType.dto'
 
 @Injectable()
 export class TradingSetupsService
@@ -20,6 +21,10 @@ export class TradingSetupsService
     getAll() : TradingSetupModel[]
     {
         return Object.values(this.setups)
+    }
+    getAllNonTerminated() : TradingSetupModel[]
+    {
+        return Object.values(this.setups).filter(s => s.status !== TradingSetupStatusType.TERMINATED)
     }
 
     get(id: string) : TradingSetupModel | undefined

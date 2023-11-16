@@ -2,6 +2,7 @@ enum TradingSetupStatusType
 {
     INITIAL = 'INITIAL',
     RUNNING = 'RUNNING',
+    TERMINATING = 'TERMINATING',
     TERMINATED = 'TERMINATED'
 }
 export default TradingSetupStatusType

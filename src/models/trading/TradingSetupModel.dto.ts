@@ -6,6 +6,9 @@ import TradingSetupStatusType, { TradingSetupStatusTypeAPI } from './TradingSetu
 import MathUtils from "commons/lib/mathUtils"
 import SignalModel from "commons/models/signal/SignalModel.dto"
 import { StringMap, Timestamp } from "commons/models/swagger.consts"
+import TradingSetupActionModel from './action/TradingSetupActionModel.dto'
+import TradingSetupActionType from './action/TradingSetupActionType.dto'
+import TradingSetupTradeModel, { TradingSetupTradeModelUtils } from './trade/TradingSetupTradeModel.dto'
 
 export default class TradingSetupModel
 {
@@ -25,12 +28,11 @@ export default class TradingSetupModel
     @ApiProperty() lowestPriceAmount: string = "99999999999"
     @ApiProperty() highestPriceAmount: string = "0"
 
-    @ApiProperty() tradeEntryPriceAmount: string = "0"
-    @ApiProperty() tradeLowestPriceAmount: string = "99999999999"
-    @ApiProperty() tradeHighestPriceAmount: string = "0"
+    @ApiProperty() currentAction: TradingSetupActionModel = new TradingSetupActionModel(TradingSetupActionType.MANUAL, 0)
 
-    @ApiProperty() transactions: TradingTransactionModel[] = []
-    @ApiProperty({ type: "object", additionalProperties: { type: "TradingTransactionModel" }}) openTransactions: { [id: string] : TradingTransactionModel } = {}
+    @ApiProperty() openTrades: TradingSetupTradeModel[] = []
+    @ApiProperty() finishedTrades: TradingSetupTradeModel[] = []
+
     @ApiProperty() failedDueToMarketMaking: number = 0
 }
 
@@ -51,51 +53,36 @@ export class TradingSetupModelUtils
         if (MathUtils.IsLessThan(t.currentPriceAmount, t.lowestPriceAmount)){
             t.lowestPriceAmount = t.currentPriceAmount
         }
-        if (MathUtils.IsGreaterThan(t.currentPriceAmount, t.tradeHighestPriceAmount)){
-            t.tradeHighestPriceAmount = t.currentPriceAmount
-        }
-        if (MathUtils.IsLessThan(t.currentPriceAmount, t.tradeLowestPriceAmount)){
-            t.tradeLowestPriceAmount = t.currentPriceAmount
+        for(const trade of t.openTrades){
+            if (MathUtils.IsGreaterThan(t.currentPriceAmount, trade.highestPriceAmount)){
+                trade.highestPriceAmount = t.currentPriceAmount
+            }
+            if (MathUtils.IsLessThan(t.currentPriceAmount, trade.lowestPriceAmount)){
+                trade.lowestPriceAmount = t.currentPriceAmount
+            }
         }
         return t
     }
     
-    static UpdateTransaction(t: TradingSetupModel, transaction: TradingTransactionModel) : TradingSetupModel
+    static CreateBuyTrade(t: TradingSetupModel, transaction: TradingTransactionModel) : TradingSetupModel
     {
+        const trade = TradingSetupTradeModelUtils.FromTransaction(transaction)
+        t.openTrades.push(trade)
+
         if (transaction.complete){
-            delete t.openTransactions[transaction.transactionId]
-            t.transactions.push(transaction)
-
-            if (transaction.canceled && MathUtils.IsZero(transaction.firstAmount)) { return t }
-            
-            //TODO: fix once trades are actually per order
-            if (transaction.buy){
-                t.tradeEntryPriceAmount = transaction.priceAmount
-                t.tradeLowestPriceAmount = transaction.priceAmount
-                t.tradeHighestPriceAmount = transaction.priceAmount
-            }else{
-                t.tradeEntryPriceAmount = t.currentPriceAmount
-                t.tradeLowestPriceAmount = t.currentPriceAmount
-                t.tradeHighestPriceAmount = t.currentPriceAmount
-            }
-    
-            if (transaction.buy){
-                t.firstAmount = MathUtils.AddNumbers(t.firstAmount, transaction.firstAmount)
-                t.secondAmount = MathUtils.SubtractNumbers(t.secondAmount, transaction.secondAmount)
-            }else{
-                t.firstAmount = MathUtils.SubtractNumbers(t.firstAmount, transaction.firstAmount)
-                t.secondAmount = MathUtils.AddNumbers(t.secondAmount, transaction.secondAmount)
-            }
-            console.log('UpdateTransaction id: ' + t.id + (transaction.buy ? ' BUY ' : ' SELL ') + t.config.firstToken + ': ' + t.firstAmount, ' | ' + t.config.secondToken + ' : ' + t.secondAmount + ' avgPrice: ' + MathUtils.Shorten(transaction.priceAmount) + ' vs currentPrice: ' + MathUtils.Shorten(t.currentPriceAmount))
-            console.log('UpdateTransaction transaction: ' + t.config.firstToken + ': ' + transaction.firstAmount, ' | ' + t.config.secondToken + ' : ' + transaction.secondAmount + ' wantedPriceAmount: ' + MathUtils.Shorten(transaction.wantedPriceAmount))
+            t.firstAmount = MathUtils.AddNumbers(t.firstAmount, trade.firstAmount)
+            t.secondAmount = MathUtils.SubtractNumbers(t.secondAmount, trade.secondAmount)
         }else{
-            t.openTransactions[transaction.transactionId] = transaction
+            // t.firstAmount = MathUtils.SubtractNumbers(t.firstAmount, trade.startingFirstAmount)
+            t.secondAmount = MathUtils.SubtractNumbers(t.secondAmount, trade.startingSecondAmount)
         }
         return t
     }
 
-    static UpdateTermination(t: TradingSetupModel) : TradingSetupActionModel
+    static UpdateTerminating(t: TradingSetupModel)
     {
+        if (t.status === TradingSetupStatusType.TERMINATING || t.status === TradingSetupStatusType.TERMINATED) { return }
+
         const firstInSecondAmount = MathUtils.MultiplyNumbers(t.firstAmount, t.currentPriceAmount)
         const totalSecondAmount = MathUtils.AddNumbers(firstInSecondAmount, t.secondAmount)
 
@@ -106,61 +93,19 @@ export class TradingSetupModelUtils
             const triggerPercentage = "" + (1.0 - t.config.terminationPercentageLoss)
             
             if (MathUtils.IsLessThanOrEqualTo(currentPercentageWinAmount, triggerPercentage)){
+                t.status = TradingSetupStatusType.TERMINATING
+            }
+        }
+    }
+
+    static UpdateTermination(t: TradingSetupModel) : boolean
+    {
+        if (t.status === TradingSetupStatusType.TERMINATING){
+            if (t.openTrades.length === 0){
                 t.status = TradingSetupStatusType.TERMINATED
-                return new TradingSetupActionModel(TradingSetupActionType.TERMINATION, -1)
             }
+            return true
         }
-        return new TradingSetupActionModel(TradingSetupActionType.TERMINATION)
-    }
-
-    static UpdateTakeProfit(t: TradingSetupModel, minAmount: string) : TradingSetupActionModel
-    {
-        if (MathUtils.IsLessThan(t.firstAmount, minAmount)) { return new TradingSetupActionModel(TradingSetupActionType.TAKEPROFIT) }
-
-        const takeProfit = t.config.takeProfit
-        if (takeProfit){
-            const trailingStop = takeProfit.trailingStop
-            if (trailingStop){
-                const hardLimitPercentage = trailingStop.hardLimitPercentage
-                if (hardLimitPercentage){
-                    const triggerAmount = MathUtils.MultiplyNumbers(t.tradeEntryPriceAmount, "" + (1.0 + hardLimitPercentage))
-                    if (MathUtils.IsGreaterThanOrEqualTo(t.currentPriceAmount, triggerAmount)){
-                        return new TradingSetupActionModel(TradingSetupActionType.TAKEPROFIT, -1)
-                    }
-                }
-                const activationAmount = MathUtils.MultiplyNumbers(t.tradeEntryPriceAmount, "" + (1.0 + takeProfit.percentage))
-                if (MathUtils.IsGreaterThanOrEqualTo(t.tradeHighestPriceAmount, activationAmount)){
-                    const triggerAmount = MathUtils.MultiplyNumbers(t.tradeHighestPriceAmount, "" + (1.0 - trailingStop.deltaPercentage))
-                    if (MathUtils.IsLessThanOrEqualTo(t.currentPriceAmount, triggerAmount)){
-                        return new TradingSetupActionModel(TradingSetupActionType.TAKEPROFIT, -1)
-                    }
-                }
-            }else{
-                const triggerAmount = MathUtils.MultiplyNumbers(t.tradeEntryPriceAmount, "" + (1.0 + takeProfit.percentage))
-                if (MathUtils.IsGreaterThanOrEqualTo(t.currentPriceAmount, triggerAmount)){
-                    return new TradingSetupActionModel(TradingSetupActionType.TAKEPROFIT, -1)
-                }
-            }
-        }
-        return new TradingSetupActionModel(TradingSetupActionType.TAKEPROFIT)
-    }
-
-    static UpdateStopLoss(t: TradingSetupModel, minAmount: string) : TradingSetupActionModel
-    {
-        if (MathUtils.IsLessThan(t.firstAmount, minAmount)) { return new TradingSetupActionModel(TradingSetupActionType.STOPLOSS) }
-        
-        const stopLoss = t.config.stopLoss
-        if (stopLoss){
-            const triggerAmount = MathUtils.MultiplyNumbers(t.tradeEntryPriceAmount, "" + (1.0 - stopLoss.percentage))
-            if (MathUtils.IsLessThanOrEqualTo(t.currentPriceAmount, triggerAmount)){
-                return new TradingSetupActionModel(TradingSetupActionType.STOPLOSS, -1)
-            }
-        }
-        return new TradingSetupActionModel(TradingSetupActionType.STOPLOSS)
-    }
-
-    static UpdateSignal(t: TradingSetupModel, signal: SignalModel) : TradingSetupActionModel
-    {
-        return new TradingSetupActionModel(TradingSetupActionType.SIGNAL, signal.action * signal.certainty)
+        return false
     }
 }
