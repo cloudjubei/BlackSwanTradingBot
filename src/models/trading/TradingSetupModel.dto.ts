@@ -94,7 +94,7 @@ export class TradingSetupModelUtils
         return t
     }
 
-    static UpdateTermination(t: TradingSetupModel) : number
+    static UpdateTermination(t: TradingSetupModel) : TradingSetupActionModel
     {
         const firstInSecondAmount = MathUtils.MultiplyNumbers(t.firstAmount, t.currentPriceAmount)
         const totalSecondAmount = MathUtils.AddNumbers(firstInSecondAmount, t.secondAmount)
@@ -107,15 +107,15 @@ export class TradingSetupModelUtils
             
             if (MathUtils.IsLessThanOrEqualTo(currentPercentageWinAmount, triggerPercentage)){
                 t.status = TradingSetupStatusType.TERMINATED
-                return -1
+                return new TradingSetupActionModel(TradingSetupActionType.TERMINATION, -1)
             }
         }
-        return 0
+        return new TradingSetupActionModel(TradingSetupActionType.TERMINATION)
     }
 
-    static UpdateTakeProfit(t: TradingSetupModel, minAmount: string) : number
+    static UpdateTakeProfit(t: TradingSetupModel, minAmount: string) : TradingSetupActionModel
     {
-        if (MathUtils.IsLessThan(t.firstAmount, minAmount)) { return 0 }
+        if (MathUtils.IsLessThan(t.firstAmount, minAmount)) { return new TradingSetupActionModel(TradingSetupActionType.TAKEPROFIT) }
 
         const takeProfit = t.config.takeProfit
         if (takeProfit){
@@ -125,42 +125,42 @@ export class TradingSetupModelUtils
                 if (hardLimitPercentage){
                     const triggerAmount = MathUtils.MultiplyNumbers(t.tradeEntryPriceAmount, "" + (1.0 + hardLimitPercentage))
                     if (MathUtils.IsGreaterThanOrEqualTo(t.currentPriceAmount, triggerAmount)){
-                        return -1
+                        return new TradingSetupActionModel(TradingSetupActionType.TAKEPROFIT, -1)
                     }
                 }
                 const activationAmount = MathUtils.MultiplyNumbers(t.tradeEntryPriceAmount, "" + (1.0 + takeProfit.percentage))
                 if (MathUtils.IsGreaterThanOrEqualTo(t.tradeHighestPriceAmount, activationAmount)){
                     const triggerAmount = MathUtils.MultiplyNumbers(t.tradeHighestPriceAmount, "" + (1.0 - trailingStop.deltaPercentage))
                     if (MathUtils.IsLessThanOrEqualTo(t.currentPriceAmount, triggerAmount)){
-                        return -1
+                        return new TradingSetupActionModel(TradingSetupActionType.TAKEPROFIT, -1)
                     }
                 }
             }else{
                 const triggerAmount = MathUtils.MultiplyNumbers(t.tradeEntryPriceAmount, "" + (1.0 + takeProfit.percentage))
                 if (MathUtils.IsGreaterThanOrEqualTo(t.currentPriceAmount, triggerAmount)){
-                    return -1
+                    return new TradingSetupActionModel(TradingSetupActionType.TAKEPROFIT, -1)
                 }
             }
         }
-        return 0
+        return new TradingSetupActionModel(TradingSetupActionType.TAKEPROFIT)
     }
 
-    static UpdateStopLoss(t: TradingSetupModel, minAmount: string) : number
+    static UpdateStopLoss(t: TradingSetupModel, minAmount: string) : TradingSetupActionModel
     {
-        if (MathUtils.IsLessThan(t.firstAmount, minAmount)) { return 0 }
+        if (MathUtils.IsLessThan(t.firstAmount, minAmount)) { return new TradingSetupActionModel(TradingSetupActionType.STOPLOSS) }
         
         const stopLoss = t.config.stopLoss
         if (stopLoss){
             const triggerAmount = MathUtils.MultiplyNumbers(t.tradeEntryPriceAmount, "" + (1.0 - stopLoss.percentage))
             if (MathUtils.IsLessThanOrEqualTo(t.currentPriceAmount, triggerAmount)){
-                return -1
+                return new TradingSetupActionModel(TradingSetupActionType.STOPLOSS, -1)
             }
         }
-        return 0
+        return new TradingSetupActionModel(TradingSetupActionType.STOPLOSS)
     }
 
-    static UpdateSignal(t: TradingSetupModel, signal: SignalModel) : number
+    static UpdateSignal(t: TradingSetupModel, signal: SignalModel) : TradingSetupActionModel
     {
-        return signal.action * signal.certainty
+        return new TradingSetupActionModel(TradingSetupActionType.SIGNAL, signal.action * signal.certainty)
     }
 }

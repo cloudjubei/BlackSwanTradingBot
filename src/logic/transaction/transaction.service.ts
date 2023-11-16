@@ -8,6 +8,7 @@ import MathUtils from "commons/lib/mathUtils"
 import ArrayUtils from "commons/lib/arrayUtils"
 import { IdentityService } from 'logic/identity/identity.service'
 import WalletModel from 'models/WalletModel.dto'
+import TradingSetupActionModel, { TradingSetupActionModelUtils } from 'models/trading/TradingSetupActionModel.dto'
 
 @Injectable()
 export class TransactionService
@@ -134,11 +135,11 @@ export class TransactionService
     }
 
     
-    async makeTransaction(setup: TradingSetupModel, action: number) : Promise<TradingTransactionModel> | undefined
+    async makeTransaction(setup: TradingSetupModel, action: TradingSetupActionModel) : Promise<TradingTransactionModel> | undefined
     {
-        if (action == 0) { return }
+        if (TradingSetupActionModelUtils.IsNoOp(action)) { return }
 
-        const buy = action > 0 // action < 0 == SELL
+        const buy = TradingSetupActionModelUtils.IsBuy(action)
         const tradeAmount = this.getTradeAmount(setup, buy)
 
         if (!MathUtils.IsBiggerThanZero(tradeAmount)) { return }

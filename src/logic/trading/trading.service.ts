@@ -14,6 +14,7 @@ import PriceModel from "commons/models/price/PriceModel.dto"
 import PriceKlineModel from 'commons/models/price/PriceKlineModel.dto'
 import { IdentityService } from 'logic/identity/identity.service'
 import StorageUtils from 'commons/lib/storageUtils'
+import TradingSetupActionModel, { TradingSetupActionModelUtils } from 'models/trading/TradingSetupActionModel.dto'
 
 @Injectable()
 export class TradingService implements OnApplicationBootstrap
@@ -217,7 +218,7 @@ export class TradingService implements OnApplicationBootstrap
 
         const action = this.updateAction(setup)
             
-        if (action !== 0){
+        if (!TradingSetupActionModelUtils.IsNoOp(action)){
             const transaction = await this.transactionService.makeTransaction(setup, action)
             if (transaction){
                 TradingSetupModelUtils.UpdateTransaction(setup, transaction)
@@ -227,15 +228,15 @@ export class TradingService implements OnApplicationBootstrap
         return false
     }
 
-    private updateAction(tradingSetup: TradingSetupModel) : number
+    private updateAction(tradingSetup: TradingSetupModel) : TradingSetupActionModel
     {
         let action = TradingSetupModelUtils.UpdateTermination(tradingSetup)
-        if (action === 0){
+        if (!TradingSetupActionModelUtils.IsNoOp(action)){
             const minAmount = this.identityService.getMinAmounts()[tradingSetup.config.firstToken]
             action = TradingSetupModelUtils.UpdateTakeProfit(tradingSetup, minAmount)
-            if (action === 0){
+            if (!TradingSetupActionModelUtils.IsNoOp(action)){
                 action = TradingSetupModelUtils.UpdateStopLoss(tradingSetup, minAmount)
-                if (action === 0){
+                if (!TradingSetupActionModelUtils.IsNoOp(action)){
                     const tokenPair = TradingSetupConfigModelUtils.GetTokenPair(tradingSetup.config)
                     const interval = tradingSetup.config.interval
                     const signal = this.signalsService.getFromCache(tradingSetup.config.signal, tokenPair, interval)

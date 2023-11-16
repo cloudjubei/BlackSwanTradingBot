@@ -4,6 +4,8 @@ import { TransactionService } from './transaction.service'
 import WalletModel from 'models/WalletModel.dto'
 import TradingSetupModel, { TradingSetupModelUtils } from 'models/trading/TradingSetupModel.dto'
 import { TradingSetupsService } from 'logic/trading/setups/trading-setups.service'
+import TradingSetupActionModel from 'models/trading/TradingSetupActionModel.dto'
+import TradingSetupActionType from 'models/trading/TradingSetupActionType.dto'
 
 @ApiTags("transaction")
 @Controller("transactions")
@@ -48,7 +50,7 @@ export class TransactionController
     async forceBuy(@Param('id') id: string) : Promise<TradingSetupModel>
     {
         const setup = await this.tradingSetupsService.get(id)
-        const transaction = await this.transactionService.makeTransaction(setup, 1)
+        const transaction = await this.transactionService.makeTransaction(setup, new TradingSetupActionModel(TradingSetupActionType.MANUAL, 1))
         if (transaction){
             TradingSetupModelUtils.UpdateTransaction(setup, transaction)
         }
@@ -61,7 +63,7 @@ export class TransactionController
         const setup = await this.tradingSetupsService.get(id)
         if (Object.keys(setup.openTransactions).length > 0){ return setup }
 
-        const transaction = await this.transactionService.makeTransaction(setup, -1)
+        const transaction = await this.transactionService.makeTransaction(setup, new TradingSetupActionModel(TradingSetupActionType.MANUAL, -1))
         if (transaction){
             TradingSetupModelUtils.UpdateTransaction(setup, transaction)
         }
