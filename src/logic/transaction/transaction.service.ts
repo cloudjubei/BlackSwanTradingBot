@@ -93,27 +93,30 @@ export class TransactionService
         if (!transaction.complete){
             return this.getOrder(setup, transaction)
             .then(response => {
-                const newTransaction =  TradingTransactionModelUtils.FromBinanceResponse(setup.config.firstToken, setup.config.secondToken, transaction.offeredAmount, transaction.wantedPriceAmount, response, transaction)
+                console.log("updateTransaction BINANCE RESPONSE:")
+                console.log(response)
+                const newTransaction =  TradingTransactionModelUtils.FromBinanceTransactionResponse(setup, transaction, response)
 
                 if (this.shouldCancel(setup, newTransaction)){
-                    return this.cancelOrder(setup, transaction)
+                    return this.cancelOrder(setup, newTransaction)
                     .then(response => {
-                        return TradingTransactionModelUtils.FromBinanceResponse(setup.config.firstToken, setup.config.secondToken, transaction.offeredAmount, transaction.wantedPriceAmount, response, newTransaction)
+                        console.log("cancelOrder response: ")
+                        console.log(response)
+                        return TradingTransactionModelUtils.FromBinanceTransactionResponse(setup, newTransaction, response)
                     }).catch(e => {
                         if (e.code === -2011){
                             console.log("CANCEL ERROR UNKNOWN ORDER")
                         }
                         console.log("CANCEL ERROR: ")
                         console.log(e)
-                        transaction.complete = true
-                        transaction.canceled = true
-                        return transaction
+                        newTransaction.complete = true
+                        newTransaction.canceled = true
+                        return newTransaction
                     }) 
                 }
                 return newTransaction
             })
         }
-        return transaction
     }
 
     private async getOrder(setup: TradingSetupModel, transaction: TradingTransactionModel) : Promise<SpotOrder>
@@ -188,6 +191,8 @@ export class TransactionService
             response = await this.makeMarketTransaction(TradingSetupConfigModelUtils.GetTokenPair(setup.config), amount, buy, setup.config.isMarginAccount)
         }
         
+        console.log("BINANCE RESPONSE:")
+        console.log(response)
         if (response){
             return TradingTransactionModelUtils.FromBinanceResponse(setup.config.firstToken, setup.config.secondToken, amount, wantedPrice, response)
         }else{
@@ -325,7 +330,7 @@ export class TransactionService
 
     private shouldCancel(setup: TradingSetupModel, transaction: TradingTransactionModel) : boolean
     {
-        if (transaction.canceled) { return false }
+        if (transaction.complete || transaction.canceled) { return false }
         if (transaction.checks > setup.config.limitOrderCancelDueToChecksElapsed){
             return true
         }

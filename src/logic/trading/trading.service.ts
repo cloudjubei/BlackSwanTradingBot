@@ -183,7 +183,7 @@ export class TradingService implements OnApplicationBootstrap
         const tradesComplete = []
         for(const t of setup.openTrades){
             await this.updateOpenTrade(setup, t)
-            if (t.status === TradingSetupTradeTransactionStatus.COMPLETE){
+            if (t.status === TradingSetupTradeTransactionStatus.COMPLETE || t.status === TradingSetupTradeTransactionStatus.CANCELLED){
                 tradesComplete.push(t)
             }
         }
@@ -213,10 +213,13 @@ export class TradingService implements OnApplicationBootstrap
 
     private async updateOpenTrade(tradingSetup: TradingSetupModel, trade: TradingSetupTradeModel)
     {
+        trade.updateTimestamp = Date.now()
         if (trade.status === TradingSetupTradeTransactionStatus.BUY_PENDING){
             try{
                 const newTransaction = await this.transactionService.updateTransaction(tradingSetup, trade.buyTransaction)
-                TradingSetupTradeModelUtils.UpdateBuyTransaction(trade, tradingSetup, newTransaction)
+                if (newTransaction){
+                    TradingSetupTradeModelUtils.UpdateBuyTransaction(trade, tradingSetup, newTransaction)
+                }
             }catch(e){
                 console.error("updateOpenTrade BUY_PENDING error: " + JSON.stringify(e))
             }
@@ -228,12 +231,12 @@ export class TradingService implements OnApplicationBootstrap
                 action = new TradingSetupActionModel(TradingSetupActionType.TERMINATION, -1)
             }
     
-            if (!TradingSetupActionModelUtils.IsNoOp(action)){
+            if (TradingSetupActionModelUtils.IsNoOp(action)){
                 const minAmount = this.identityService.getMinAmounts()[tradingSetup.config.firstToken]
                 action = TradingSetupTradeModelUtils.UpdateTakeProfit(trade, tradingSetup, minAmount)
-                if (!TradingSetupActionModelUtils.IsNoOp(action)){
+                if (TradingSetupActionModelUtils.IsNoOp(action)){
                     action = TradingSetupTradeModelUtils.UpdateStopLoss(trade, tradingSetup, minAmount)
-                    if (!TradingSetupActionModelUtils.IsNoOp(action)){
+                    if (TradingSetupActionModelUtils.IsNoOp(action)){
                         action = tradingSetup.currentAction
                     }else{
                         tradingSetup.timeoutTimestamp = Date.now() + (tradingSetup.config.stopLoss?.timeout ?? 0)
@@ -268,10 +271,11 @@ export class TradingService implements OnApplicationBootstrap
                 TradingSetupTradeModelUtils.UpdateSellTransaction(trade, tradingSetup, transaction)
             }else if (!this.transactionService.canMakeTransaction(tradingSetup, trade.currentAction)){
                 //failing to make the transaction due to not enough funds left -> releasing
-                tradingSetup.firstAmount = MathUtils.AddNumbers(tradingSetup.firstAmount, trade.firstAmount)
-                tradingSetup.secondAmount = MathUtils.AddNumbers(tradingSetup.secondAmount, trade.secondAmount)
                 trade.status = TradingSetupTradeTransactionStatus.COMPLETE
             }
+        }
+        if (trade.status === TradingSetupTradeTransactionStatus.COMPLETE){
+            TradingSetupTradeModelUtils.UpdateComplete(trade, tradingSetup)
         }
     }
 

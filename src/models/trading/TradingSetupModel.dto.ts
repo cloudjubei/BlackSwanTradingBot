@@ -22,6 +22,7 @@ export default class TradingSetupModel
     @ApiProperty() firstAmount: string
     @ApiProperty() secondAmount: string
 
+    @ApiProperty(Timestamp) updateTimestamp: number = 0
     @ApiProperty(Timestamp) timeoutTimestamp: number = 0
 
     @ApiProperty() currentPriceAmount: string = "0"
@@ -47,6 +48,7 @@ export class TradingSetupModelUtils
     {
         t.status = TradingSetupStatusType.RUNNING
         t.currentPriceAmount = priceAmount
+        t.updateTimestamp = Date.now()
         if (MathUtils.IsGreaterThan(t.currentPriceAmount, t.highestPriceAmount)){
             t.highestPriceAmount = t.currentPriceAmount
         }
@@ -67,11 +69,17 @@ export class TradingSetupModelUtils
     static CreateBuyTrade(t: TradingSetupModel, transaction: TradingTransactionModel) : TradingSetupModel
     {
         const trade = TradingSetupTradeModelUtils.FromTransaction(transaction)
+        trade.startTimestamp = Date.now()
+        trade.updateTimestamp = trade.startTimestamp
         t.openTrades.push(trade)
 
         if (transaction.complete){
-            t.firstAmount = MathUtils.AddNumbers(t.firstAmount, trade.firstAmount)
-            t.secondAmount = MathUtils.SubtractNumbers(t.secondAmount, trade.secondAmount)
+            t.firstAmount = MathUtils.AddNumbers(t.firstAmount, transaction.firstAmount)
+            t.secondAmount = MathUtils.SubtractNumbers(t.secondAmount, transaction.secondAmount)
+            trade.firstAmount = transaction.firstAmount
+            trade.secondAmount = '0'
+            trade.startingFirstAmount = '0'
+            trade.startingSecondAmount = transaction.secondAmount
         }else{
             // t.firstAmount = MathUtils.SubtractNumbers(t.firstAmount, trade.startingFirstAmount)
             t.secondAmount = MathUtils.SubtractNumbers(t.secondAmount, trade.startingSecondAmount)

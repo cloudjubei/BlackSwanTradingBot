@@ -1,25 +1,23 @@
-import { Prop, Schema, raw } from '@nestjs/mongoose'
-import { ApiHideProperty, ApiProperty } from "@nestjs/swagger"
-import TradingSetupConfigModel from '../TradingSetupConfigModel.dto'
+import { ApiProperty } from "@nestjs/swagger"
 import TradingTransactionModel from '../transaction/TradingTransactionModel.dto'
-import TradingSetupStatusType, { TradingSetupStatusTypeAPI } from '../TradingSetupStatusType.dto'
 import MathUtils from "commons/lib/mathUtils"
-import SignalModel from "commons/models/signal/SignalModel.dto"
-import { StringMap, Timestamp } from "commons/models/swagger.consts"
 import TradingSetupTradeTransactionStatus from './TradingSetupTradeTransactionStatus.dto'
 import TradingSetupModel from '../TradingSetupModel.dto'
 import TradingSetupActionModel from '../action/TradingSetupActionModel.dto'
 import TradingSetupActionType from '../action/TradingSetupActionType.dto'
+import { Timestamp } from "commons/models/swagger.consts"
 
 export default class TradingSetupTradeModel
 {
     @ApiProperty() id: string
 
-    @ApiProperty() startingFirstAmount: string
-    @ApiProperty() startingSecondAmount: string
-    @ApiProperty() firstAmount: string
-    @ApiProperty() secondAmount: string
+    @ApiProperty() startingFirstAmount: string = "0"
+    @ApiProperty() startingSecondAmount: string = "0"
+    @ApiProperty() firstAmount: string = "0"
+    @ApiProperty() secondAmount: string = "0"
 
+    @ApiProperty(Timestamp) startTimestamp: number = 0
+    @ApiProperty(Timestamp) updateTimestamp: number = 0
     @ApiProperty() entryPriceAmount: string = "0"
     @ApiProperty() lowestPriceAmount: string = "99999999999"
     @ApiProperty() highestPriceAmount: string = "0"
@@ -40,8 +38,6 @@ export class TradingSetupTradeModelUtils
         trade.id = transaction.transactionId
         trade.startingFirstAmount = '0'
         trade.startingSecondAmount = transaction.offeredAmount
-        trade.firstAmount = transaction.firstAmount
-        trade.secondAmount = transaction.secondAmount
         trade.buyTransaction = transaction
         trade.entryPriceAmount = transaction.priceAmount
         trade.lowestPriceAmount = transaction.priceAmount
@@ -52,16 +48,22 @@ export class TradingSetupTradeModelUtils
 
     static UpdateBuyTransaction(trade: TradingSetupTradeModel, setup: TradingSetupModel, transaction: TradingTransactionModel)
     {
+        trade.buyTransaction = transaction
         if (transaction.complete){
+            if (transaction.canceled && MathUtils.IsZero(transaction.firstAmount)){
+                setup.secondAmount = MathUtils.AddNumbers(setup.secondAmount, trade.startingSecondAmount)
+                trade.status = TradingSetupTradeTransactionStatus.CANCELLED
+                return
+            }
             trade.entryPriceAmount = transaction.priceAmount
             trade.lowestPriceAmount = transaction.priceAmount
             trade.highestPriceAmount = transaction.priceAmount
 
-            trade.firstAmount = transaction.firstAmount
-            trade.secondAmount = transaction.secondAmount
+            setup.firstAmount = MathUtils.AddNumbers(setup.firstAmount, transaction.firstAmount)
+            setup.secondAmount = MathUtils.SubtractNumbers(MathUtils.AddNumbers(setup.secondAmount, trade.startingSecondAmount), transaction.secondAmount)
 
-            setup.firstAmount = MathUtils.AddNumbers(setup.firstAmount, trade.firstAmount)
-            setup.secondAmount = MathUtils.SubtractNumbers(MathUtils.AddNumbers(setup.secondAmount, trade.startingSecondAmount), trade.secondAmount)
+            trade.firstAmount = transaction.firstAmount
+            trade.secondAmount = '0'
 
             trade.status = MathUtils.IsZero(trade.firstAmount) && MathUtils.IsZero(trade.secondAmount) ? TradingSetupTradeTransactionStatus.COMPLETE : TradingSetupTradeTransactionStatus.BUY_DONE
             
@@ -92,10 +94,14 @@ export class TradingSetupTradeModelUtils
             if (!MathUtils.IsZero(trade.firstAmount)){
                 trade.status = TradingSetupTradeTransactionStatus.SELL_PARTIALLY_DONE
             }else{
-                trade.firstAmount = 
                 trade.status = TradingSetupTradeTransactionStatus.COMPLETE
             }
         } 
+    }
+
+    static UpdateComplete(trade: TradingSetupTradeModel, setup: TradingSetupModel)
+    {
+        setup.firstAmount = MathUtils.AddNumbers(setup.firstAmount, trade.firstAmount)
     }
 
     static UpdateTakeProfit(trade: TradingSetupTradeModel, setup: TradingSetupModel, minAmount: string) : TradingSetupActionModel

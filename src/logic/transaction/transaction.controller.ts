@@ -6,6 +6,7 @@ import TradingSetupModel, { TradingSetupModelUtils } from 'models/trading/Tradin
 import { TradingSetupsService } from 'logic/trading/setups/trading-setups.service'
 import TradingSetupActionModel from 'models/trading/action/TradingSetupActionModel.dto'
 import TradingSetupActionType from 'models/trading/action/TradingSetupActionType.dto'
+import TradingSetupTradeTransactionStatus from 'models/trading/trade/TradingSetupTradeTransactionStatus.dto'
 
 @ApiTags("transaction")
 @Controller("transactions")
@@ -50,10 +51,10 @@ export class TransactionController
     async forceBuy(@Param('id') id: string) : Promise<TradingSetupModel>
     {
         const setup = await this.tradingSetupsService.get(id)
-        // const transaction = await this.transactionService.makeTransaction(setup, new TradingSetupActionModel(TradingSetupActionType.MANUAL, 1))
-        // if (transaction){
-        //     TradingSetupModelUtils.UpdateTransaction(setup, transaction)
-        // }
+        const transaction = await this.transactionService.makeTransaction(setup, new TradingSetupActionModel(TradingSetupActionType.MANUAL, 1))
+        if (transaction){
+            TradingSetupModelUtils.CreateBuyTrade(setup, transaction)
+        }
         return setup
     }
 
@@ -61,12 +62,12 @@ export class TransactionController
     async forceSell(@Param('id') id: string) : Promise<TradingSetupModel>
     {
         const setup = await this.tradingSetupsService.get(id)
-        // if (Object.keys(setup.openTransactions).length > 0){ return setup }
 
-        // const transaction = await this.transactionService.makeTransaction(setup, new TradingSetupActionModel(TradingSetupActionType.MANUAL, -1))
-        // if (transaction){
-        //     TradingSetupModelUtils.UpdateTransaction(setup, transaction)
-        // }
+        if (setup.openTrades.length > 0){
+            const trade = setup.openTrades[0]
+            trade.status = TradingSetupTradeTransactionStatus.SELL_PARTIALLY_DONE
+            trade.currentAction = new TradingSetupActionModel(TradingSetupActionType.MANUAL, -1)
+        }
         return setup
     }
 }

@@ -4,7 +4,8 @@ enum TradingSetupTradeTransactionStatus
     BUY_DONE = 'BUY_DONE',
     SELL_PENDING = 'SELL_PENDING',
     SELL_PARTIALLY_DONE = 'SELL_PARTIALLY_DONE',
-    COMPLETE = 'COMPLETE'
+    COMPLETE = 'COMPLETE',
+    CANCELLED = 'CANCELLED'
 }
 export default TradingSetupTradeTransactionStatus
 

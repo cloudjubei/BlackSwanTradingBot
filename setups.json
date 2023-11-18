@@ -15,7 +15,8 @@
         "startingSecondAmount": "874",
         "firstAmount": "0",
         "secondAmount": "874",
-        "lastUpdate": 0,
+        "updateTimestamp": 0,
+        "timeoutTimestamp": 0,
 
         "currentPriceAmount": "0",
         "lowestPriceAmount": "99999999999",
@@ -53,7 +54,8 @@
         "startingSecondAmount": "1000",
         "firstAmount": "0",
         "secondAmount": "1000",
-        "lastUpdate": 0,
+        "updateTimestamp": 0,
+        "timeoutTimestamp": 0,
 
         "currentPriceAmount": "0",
         "lowestPriceAmount": "99999999999",
@@ -97,7 +99,8 @@
         "startingSecondAmount": "1000",
         "firstAmount": "0",
         "secondAmount": "1000",
-        "lastUpdate": 0,
+        "updateTimestamp": 0,
+        "timeoutTimestamp": 0,
 
         "currentPriceAmount": "0",
         "lowestPriceAmount": "99999999999",

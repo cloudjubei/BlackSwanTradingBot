@@ -1,4 +1,5 @@
 import MathUtils from "commons/lib/mathUtils"
+import TradingSetupModel from "../TradingSetupModel.dto"
 
 export default class TradingTransactionModel
 {
@@ -25,11 +26,15 @@ export class TradingTransactionModelUtils
         return m.firstToken + m.secondToken
     }
 
+    static FromBinanceTransactionResponse(tradingSetup: TradingSetupModel, transaction: TradingTransactionModel, response: any) : TradingTransactionModel
+    {
+        return TradingTransactionModelUtils.FromBinanceResponse(tradingSetup.config.firstToken, tradingSetup.config.secondToken, transaction.offeredAmount, transaction.wantedPriceAmount, response, transaction)
+    }
     static FromBinanceResponse(firstToken: string, secondToken: string, offeredAmount: string, wantedPriceAmount: string, response: any, augmentingTransaction: TradingTransactionModel = undefined) : TradingTransactionModel
     {
-        const firstAmount = parseFloat(response['executedQty']) ?? 0
-        const secondAmount = parseFloat(response['cummulativeQuoteQty']) ?? 0
-        let priceAmount = '' + (parseFloat(response['price']) ?? 0)
+        const firstAmount = parseFloat(response['executedQty'] ?? '0') ?? 0
+        const secondAmount = parseFloat(response['cummulativeQuoteQty'] ?? '0') ?? 0
+        let priceAmount = '' + (parseFloat(response['price'] ?? '0') ?? 0)
 
         if (TradingTransactionModelUtils.IsCompleted(response) && MathUtils.IsZero(priceAmount)){
             const fullAmount = "" + firstAmount
