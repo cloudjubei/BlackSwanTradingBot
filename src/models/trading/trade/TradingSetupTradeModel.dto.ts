@@ -23,6 +23,8 @@ export default class TradingSetupTradeModel
     @ApiProperty() highestPriceAmount: string = "0"
 
     @ApiProperty() currentAction: TradingSetupActionModel = new TradingSetupActionModel(TradingSetupActionType.MANUAL, 0)
+    @ApiProperty() manualOverrideAction?: TradingSetupActionModel = undefined
+    
     @ApiProperty() status: TradingSetupTradeTransactionStatus = TradingSetupTradeTransactionStatus.BUY_PENDING
     @ApiProperty() buyTransaction: TradingTransactionModel
     @ApiProperty() sellTransactions: TradingTransactionModel[] = []
@@ -43,9 +45,23 @@ export class TradingSetupTradeModelUtils
         trade.lowestPriceAmount = transaction.priceAmount
         trade.highestPriceAmount = transaction.priceAmount
         trade.status = transaction.complete ? TradingSetupTradeTransactionStatus.BUY_DONE : TradingSetupTradeTransactionStatus.BUY_PENDING
+        trade.startTimestamp = Date.now()
+        trade.updateTimestamp = trade.startTimestamp
         return trade
     }
 
+    static UpdateBuyCompleteTransaction(trade: TradingSetupTradeModel, setup: TradingSetupModel, transaction: TradingTransactionModel)
+    {
+        setup.firstAmount = MathUtils.AddNumbers(setup.firstAmount, transaction.firstAmount)
+        setup.secondAmount = MathUtils.SubtractNumbers(setup.secondAmount, transaction.secondAmount)
+
+        trade.firstAmount = transaction.firstAmount
+        trade.secondAmount = '0'
+        trade.startingFirstAmount = '0'
+        trade.startingSecondAmount = transaction.secondAmount
+
+        trade.status = MathUtils.IsZero(trade.firstAmount) && MathUtils.IsZero(trade.secondAmount) ? TradingSetupTradeTransactionStatus.COMPLETE : TradingSetupTradeTransactionStatus.BUY_DONE
+    }
     static UpdateBuyTransaction(trade: TradingSetupTradeModel, setup: TradingSetupModel, transaction: TradingTransactionModel)
     {
         trade.buyTransaction = transaction
@@ -59,13 +75,8 @@ export class TradingSetupTradeModelUtils
             trade.lowestPriceAmount = transaction.priceAmount
             trade.highestPriceAmount = transaction.priceAmount
 
-            setup.firstAmount = MathUtils.AddNumbers(setup.firstAmount, transaction.firstAmount)
-            setup.secondAmount = MathUtils.SubtractNumbers(MathUtils.AddNumbers(setup.secondAmount, trade.startingSecondAmount), transaction.secondAmount)
-
-            trade.firstAmount = transaction.firstAmount
-            trade.secondAmount = '0'
-
-            trade.status = MathUtils.IsZero(trade.firstAmount) && MathUtils.IsZero(trade.secondAmount) ? TradingSetupTradeTransactionStatus.COMPLETE : TradingSetupTradeTransactionStatus.BUY_DONE
+            setup.secondAmount = MathUtils.AddNumbers(setup.secondAmount, trade.startingSecondAmount)
+            TradingSetupTradeModelUtils.UpdateBuyCompleteTransaction(trade, setup, transaction)
             
             console.log('UpdateBuyTransaction id: ' + trade.id + " BUY " + setup.config.firstToken + ': ' + trade.firstAmount, ' | ' + setup.config.secondToken + ' : ' + trade.secondAmount + ' avgPrice: ' + MathUtils.Shorten(transaction.priceAmount) + ' vs currentPrice: ' + MathUtils.Shorten(setup.currentPriceAmount))
             console.log('UpdateBuyTransaction transaction: ' + setup.config.firstToken + ': ' + transaction.firstAmount, ' | ' + setup.config.secondToken + ' : ' + transaction.secondAmount + ' wantedPriceAmount: ' + MathUtils.Shorten(transaction.wantedPriceAmount))

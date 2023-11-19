@@ -7,6 +7,7 @@ import { TradingSetupsService } from 'logic/trading/setups/trading-setups.servic
 import TradingSetupActionModel from 'models/trading/action/TradingSetupActionModel.dto'
 import TradingSetupActionType from 'models/trading/action/TradingSetupActionType.dto'
 import TradingSetupTradeTransactionStatus from 'models/trading/trade/TradingSetupTradeTransactionStatus.dto'
+import MathUtils from 'commons/lib/mathUtils'
 
 @ApiTags("transaction")
 @Controller("transactions")
@@ -51,10 +52,9 @@ export class TransactionController
     async forceBuy(@Param('id') id: string) : Promise<TradingSetupModel>
     {
         const setup = await this.tradingSetupsService.get(id)
-        const transaction = await this.transactionService.makeTransaction(setup, new TradingSetupActionModel(TradingSetupActionType.MANUAL, 1))
-        if (transaction){
-            TradingSetupModelUtils.CreateBuyTrade(setup, transaction)
-        }
+
+        setup.manualOverrideAction = new TradingSetupActionModel(TradingSetupActionType.MANUAL, 1)
+
         return setup
     }
 
@@ -65,8 +65,7 @@ export class TransactionController
 
         if (setup.openTrades.length > 0){
             const trade = setup.openTrades[0]
-            trade.status = TradingSetupTradeTransactionStatus.SELL_PARTIALLY_DONE
-            trade.currentAction = new TradingSetupActionModel(TradingSetupActionType.MANUAL, -1)
+            trade.manualOverrideAction = new TradingSetupActionModel(TradingSetupActionType.MANUAL, -1)
         }
         return setup
     }

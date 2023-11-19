@@ -166,9 +166,9 @@ export class TradingService implements OnApplicationBootstrap
             hasUpdate = hasUpdate || await this.updateSetup(setup)
         }
 
-        if (hasUpdate){
-            StorageUtils.createOrWriteToFile('.', 'setups.json', JSON.stringify(this.tradingSetupsService.getAll()))
-        }
+        // if (hasUpdate){
+        StorageUtils.createOrWriteToFile('.', 'setups.json', JSON.stringify(this.tradingSetupsService.getAll()))
+        // }
     }
 
     private async updateSetup(setup: TradingSetupModel) : Promise<boolean>
@@ -178,7 +178,12 @@ export class TradingService implements OnApplicationBootstrap
 
         TradingSetupModelUtils.UpdateTerminating(setup)
 
-        setup.currentAction = this.getAction(setup)
+        if (setup.manualOverrideAction){
+            setup.currentAction = setup.manualOverrideAction
+            setup.manualOverrideAction = undefined
+        }else{
+            setup.currentAction = this.getAction(setup)
+        }
 
         const tradesComplete = []
         for(const t of setup.openTrades){
@@ -229,6 +234,9 @@ export class TradingService implements OnApplicationBootstrap
 
             if (tradingSetup.status === TradingSetupStatusType.TERMINATING){
                 action = new TradingSetupActionModel(TradingSetupActionType.TERMINATION, -1)
+            }else{
+                action = trade.manualOverrideAction ?? action
+                trade.manualOverrideAction = undefined
             }
     
             if (TradingSetupActionModelUtils.IsNoOp(action)){

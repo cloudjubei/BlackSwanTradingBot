@@ -32,7 +32,7 @@
         "id": "test2",
         "config": {
             "firstToken": "BTC",
-            "secondToken": "USDT",
+            "secondToken": "FDUSD",
             "interval": "1s",
             "signal": "rsi30Oversold",
 
@@ -94,11 +94,12 @@
             "limitOrderCancelDueToChecksElapsed": 10000,
             "limitOrderCancelDueToTimeElapsed": 60,
             "limitOrderCancelDueToPriceDivergence": "50"
+            "isMarginAccount": true
         },
         "startingFirstAmount": "0",
-        "startingSecondAmount": "1000",
+        "startingSecondAmount": "50",
         "firstAmount": "0",
-        "secondAmount": "1000",
+        "secondAmount": "50",
         "updateTimestamp": 0,
         "timeoutTimestamp": 0,
 

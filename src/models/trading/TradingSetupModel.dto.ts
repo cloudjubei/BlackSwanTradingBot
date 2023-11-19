@@ -30,6 +30,7 @@ export default class TradingSetupModel
     @ApiProperty() highestPriceAmount: string = "0"
 
     @ApiProperty() currentAction: TradingSetupActionModel = new TradingSetupActionModel(TradingSetupActionType.MANUAL, 0)
+    @ApiProperty() manualOverrideAction?: TradingSetupActionModel = undefined
 
     @ApiProperty() openTrades: TradingSetupTradeModel[] = []
     @ApiProperty() finishedTrades: TradingSetupTradeModel[] = []
@@ -69,19 +70,11 @@ export class TradingSetupModelUtils
     static CreateBuyTrade(t: TradingSetupModel, transaction: TradingTransactionModel) : TradingSetupModel
     {
         const trade = TradingSetupTradeModelUtils.FromTransaction(transaction)
-        trade.startTimestamp = Date.now()
-        trade.updateTimestamp = trade.startTimestamp
         t.openTrades.push(trade)
 
         if (transaction.complete){
-            t.firstAmount = MathUtils.AddNumbers(t.firstAmount, transaction.firstAmount)
-            t.secondAmount = MathUtils.SubtractNumbers(t.secondAmount, transaction.secondAmount)
-            trade.firstAmount = transaction.firstAmount
-            trade.secondAmount = '0'
-            trade.startingFirstAmount = '0'
-            trade.startingSecondAmount = transaction.secondAmount
+            TradingSetupTradeModelUtils.UpdateBuyCompleteTransaction(trade, t, transaction)
         }else{
-            // t.firstAmount = MathUtils.SubtractNumbers(t.firstAmount, trade.startingFirstAmount)
             t.secondAmount = MathUtils.SubtractNumbers(t.secondAmount, trade.startingSecondAmount)
         }
         return t
