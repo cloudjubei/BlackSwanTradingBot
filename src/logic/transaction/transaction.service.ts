@@ -69,7 +69,7 @@ export class TransactionService
         })
 
         // await this.makeMarketTransaction('BTCBUSD', '41795.75', true)
-        // await this.makeMarketTransaction('BTCUSDT', '0.369470', false)
+        // await this.makeMarketTransaction('BTCFDUSD', '0.00246', false, true)
         // this.makeLimitTransaction('BTCBUSD', '0.000771', '25970', false)
         // this.updateTransaction({
         //     buy: false,
