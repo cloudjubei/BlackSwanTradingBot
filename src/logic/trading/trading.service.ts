@@ -247,7 +247,7 @@ export class TradingService implements OnApplicationBootstrap
                     if (TradingSetupActionModelUtils.IsNoOp(action)){
                         action = tradingSetup.currentAction
                     }else{
-                        tradingSetup.timeoutTimestamp = Date.now() + (tradingSetup.config.stopLoss?.timeout ?? 0)
+                        tradingSetup.timeoutTimestamp = Date.now() + ((tradingSetup.config.stopLoss?.timeout ?? 0) * 1000)
                     }
                 }
             }
