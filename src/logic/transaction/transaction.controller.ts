@@ -8,6 +8,7 @@ import TradingSetupActionModel from 'models/trading/action/TradingSetupActionMod
 import TradingSetupActionType from 'models/trading/action/TradingSetupActionType.dto'
 import TradingSetupTradeTransactionStatus from 'models/trading/trade/TradingSetupTradeTransactionStatus.dto'
 import MathUtils from 'commons/lib/mathUtils'
+import TradingSetupStatusType from 'models/trading/TradingSetupStatusType.dto'
 
 @ApiTags("transaction")
 @Controller("transactions")
@@ -67,6 +68,20 @@ export class TransactionController
             const trade = setup.openTrades[0]
             trade.manualOverrideAction = new TradingSetupActionModel(TradingSetupActionType.MANUAL, -1)
         }
+        return setup
+    }
+
+    @Post('togglePause/:id')
+    async togglePause(@Param('id') id: string) : Promise<TradingSetupModel>
+    {
+        const setup = await this.tradingSetupsService.get(id)
+        
+        if (setup.status === TradingSetupStatusType.RUNNING){
+            setup.status = TradingSetupStatusType.PAUSED
+        }else if (setup.status === TradingSetupStatusType.PAUSED){
+            setup.status = TradingSetupStatusType.RUNNING
+        }
+
         return setup
     }
 }

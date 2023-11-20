@@ -1,6 +1,7 @@
 [
     {
         "id": "test1",
+        "status": "RUNNING",
         "config": {
             "firstToken": "BTC",
             "secondToken": "USDT",
@@ -30,6 +31,7 @@
     },
     {
         "id": "test2",
+        "status": "RUNNING",
         "config": {
             "firstToken": "BTC",
             "secondToken": "FDUSD",
@@ -69,6 +71,7 @@
     },
     {
         "id": "test3",
+        "status": "RUNNING",
         "config": {
             "firstToken": "BTC",
             "secondToken": "USDT",

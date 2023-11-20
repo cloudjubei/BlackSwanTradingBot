@@ -161,7 +161,7 @@ export class TradingService implements OnApplicationBootstrap
     private async updateSetups()
     {
         let hasUpdate = false
-        const setups = this.tradingSetupsService.getAllNonTerminated()
+        const setups = this.tradingSetupsService.getAllRunning()
         for(const setup of setups) {
             hasUpdate = hasUpdate || await this.updateSetup(setup)
         }
@@ -173,7 +173,7 @@ export class TradingService implements OnApplicationBootstrap
 
     private async updateSetup(setup: TradingSetupModel) : Promise<boolean>
     {
-        if (setup.status === TradingSetupStatusType.TERMINATED){ return false }
+        if (!TradingSetupModelUtils.IsRunning(setup)){ return false }
         if (!this.updatePrice(setup)) { return false }
 
         TradingSetupModelUtils.UpdateTerminating(setup)

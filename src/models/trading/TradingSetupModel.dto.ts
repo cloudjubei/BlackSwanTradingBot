@@ -40,6 +40,11 @@ export default class TradingSetupModel
 
 export class TradingSetupModelUtils
 {
+    static IsRunning(t: TradingSetupModel) : boolean
+    {
+        return t.status === TradingSetupStatusType.RUNNING || t.status === TradingSetupStatusType.TERMINATING
+    }
+
     static GetTokenPair(t: TradingSetupModel) : string
     {
         return t.config.firstToken + t.config.secondToken

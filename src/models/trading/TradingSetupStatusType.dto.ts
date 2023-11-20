@@ -2,6 +2,7 @@ enum TradingSetupStatusType
 {
     INITIAL = 'INITIAL',
     RUNNING = 'RUNNING',
+    PAUSED = 'PAUSED',
     TERMINATING = 'TERMINATING',
     TERMINATED = 'TERMINATED'
 }
