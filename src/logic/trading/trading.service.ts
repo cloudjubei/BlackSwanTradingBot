@@ -260,11 +260,15 @@ export class TradingService implements OnApplicationBootstrap
                 }
             }
         }else if (trade.status === TradingSetupTradeTransactionStatus.SELL_PENDING){
-            for(const sellTransaction of trade.sellTransactions){
+            for(let i=0; i<trade.sellTransactions.length; i++){
+                const sellTransaction = trade.sellTransactions[i]
                 if (!sellTransaction.complete){
                     try{
                         const newTransaction = await this.transactionService.updateTransaction(tradingSetup, sellTransaction)
-                        TradingSetupTradeModelUtils.UpdateSellTransaction(trade, tradingSetup, newTransaction)
+                        if (newTransaction){
+                            TradingSetupTradeModelUtils.UpdateSellTransaction(trade, tradingSetup, newTransaction)
+                            trade.sellTransactions[i] = newTransaction
+                        }
                     }catch(e){
                         console.error("updateOpenTrade SELL_PENDING error: " + JSON.stringify(e))
                     }
