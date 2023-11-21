@@ -14,7 +14,7 @@ export default class TradingSetupModel
 {
     @ApiProperty() id: string
 
-    @ApiProperty(TradingSetupStatusTypeAPI) status: TradingSetupStatusType
+    @ApiProperty(TradingSetupStatusTypeAPI) status: TradingSetupStatusType = TradingSetupStatusType.RUNNING
     @ApiProperty() config : TradingSetupConfigModel
 
     @ApiProperty() startingFirstAmount: string
