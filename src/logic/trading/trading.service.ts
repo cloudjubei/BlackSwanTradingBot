@@ -256,8 +256,11 @@ export class TradingService implements OnApplicationBootstrap
                 const transaction = await this.transactionService.makeTransaction(tradingSetup, action)
                 if (transaction){
                     trade.sellTransactions.push(transaction)
+                    tradingSetup.firstAmount = MathUtils.SubtractNumbers(tradingSetup.firstAmount, transaction.offeredAmount)
                     TradingSetupTradeModelUtils.UpdateSellTransaction(trade, tradingSetup, transaction)
+                    TradingSetupTradeModelUtils.UpdateSellTransactionsStatus(trade)
                 }
+                
             }
         }else if (trade.status === TradingSetupTradeTransactionStatus.SELL_PENDING){
             for(let i=0; i<trade.sellTransactions.length; i++){
@@ -280,9 +283,10 @@ export class TradingService implements OnApplicationBootstrap
             const transaction = await this.transactionService.makeTransaction(tradingSetup, new TradingSetupActionModel(trade.currentAction.type, -1))
             if (transaction){
                 trade.sellTransactions.push(transaction)
+                tradingSetup.firstAmount = MathUtils.SubtractNumbers(tradingSetup.firstAmount, transaction.offeredAmount)
                 TradingSetupTradeModelUtils.UpdateSellTransaction(trade, tradingSetup, transaction)
                 TradingSetupTradeModelUtils.UpdateSellTransactionsStatus(trade)
-            }else if (!this.transactionService.canMakeTransaction(tradingSetup, trade.currentAction)){
+            }else if (!this.transactionService.canMakeTransaction(tradingSetup, new TradingSetupActionModel(trade.currentAction.type, -1))){
                 //failing to make the transaction due to not enough funds left -> releasing
                 trade.status = TradingSetupTradeTransactionStatus.COMPLETE
             }

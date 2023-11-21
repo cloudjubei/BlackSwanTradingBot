@@ -87,22 +87,30 @@ export class TradingSetupTradeModelUtils
     {
         trade.status = TradingSetupTradeTransactionStatus.SELL_PENDING
         if (transaction.complete){
-            trade.firstAmount = MathUtils.SubtractNumbers(trade.firstAmount, transaction.firstAmount)
-            trade.secondAmount = MathUtils.AddNumbers(trade.secondAmount, transaction.secondAmount)
 
-            setup.firstAmount = MathUtils.SubtractNumbers(setup.firstAmount, transaction.firstAmount)
-            setup.secondAmount = MathUtils.AddNumbers(setup.secondAmount, transaction.secondAmount)
+            setup.firstAmount = MathUtils.AddNumbers(setup.firstAmount, transaction.offeredAmount)
+            TradingSetupTradeModelUtils.UpdateSellCompleteTransaction(trade, setup, transaction)
 
             console.log('UpdateSellTransaction id: ' + trade.id + " SELL " + setup.config.firstToken + ': ' + trade.firstAmount, ' | ' + setup.config.secondToken + ' : ' + trade.secondAmount + ' avgPrice: ' + MathUtils.Shorten(transaction.priceAmount) + ' vs currentPrice: ' + MathUtils.Shorten(setup.currentPriceAmount))
             console.log('UpdateSellTransaction transaction: ' + setup.config.firstToken + ': ' + transaction.firstAmount, ' | ' + setup.config.secondToken + ' : ' + transaction.secondAmount + ' wantedPriceAmount: ' + MathUtils.Shorten(transaction.wantedPriceAmount))
         }
+    }
+    static UpdateSellCompleteTransaction(trade: TradingSetupTradeModel, setup: TradingSetupModel, transaction: TradingTransactionModel)
+    {
+        setup.firstAmount = MathUtils.SubtractNumbers(setup.firstAmount, transaction.firstAmount)
+        setup.secondAmount = MathUtils.AddNumbers(setup.secondAmount, transaction.secondAmount)
+
+        trade.firstAmount = MathUtils.SubtractNumbers(trade.firstAmount, transaction.firstAmount)
+        trade.secondAmount = MathUtils.AddNumbers(trade.secondAmount, transaction.secondAmount)
+
+        // trade.status = MathUtils.IsZero(trade.firstAmount) && MathUtils.IsZero(trade.secondAmount) ? TradingSetupTradeTransactionStatus.COMPLETE : TradingSetupTradeTransactionStatus.BUY_DONE
     }
 
     static UpdateSellTransactionsStatus(trade: TradingSetupTradeModel)
     {
         const isSellComplete = trade.sellTransactions.find(t => !t.complete) === undefined
         if (isSellComplete) {
-            if (!MathUtils.IsZero(trade.firstAmount)){
+            if (MathUtils.IsBiggerThanZero(trade.firstAmount)){
                 trade.status = TradingSetupTradeTransactionStatus.SELL_PARTIALLY_DONE
             }else{
                 trade.status = TradingSetupTradeTransactionStatus.COMPLETE
@@ -112,7 +120,7 @@ export class TradingSetupTradeModelUtils
 
     static UpdateComplete(trade: TradingSetupTradeModel, setup: TradingSetupModel)
     {
-        setup.firstAmount = MathUtils.AddNumbers(setup.firstAmount, trade.firstAmount)
+        // setup.firstAmount = MathUtils.AddNumbers(setup.firstAmount, trade.firstAmount)
     }
 
     static UpdateTakeProfit(trade: TradingSetupTradeModel, setup: TradingSetupModel, minAmount: string) : TradingSetupActionModel
