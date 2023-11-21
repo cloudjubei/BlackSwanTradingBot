@@ -100,7 +100,7 @@ export class TradingSetupTradeModelUtils
 
     static UpdateSellTransactionsStatus(trade: TradingSetupTradeModel)
     {
-        const isSellComplete = !trade.sellTransactions.find(t => !t.complete)
+        const isSellComplete = trade.sellTransactions.find(t => !t.complete) === undefined
         if (isSellComplete) {
             if (!MathUtils.IsZero(trade.firstAmount)){
                 trade.status = TradingSetupTradeTransactionStatus.SELL_PARTIALLY_DONE
