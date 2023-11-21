@@ -253,10 +253,10 @@ export class TradingService implements OnApplicationBootstrap
             }
             trade.currentAction = action
             if (TradingSetupActionModelUtils.IsSell(action)){
-                const transaction = await this.transactionService.makeTransaction(tradingSetup, action)
+                const transaction = await this.transactionService.makeTransaction(tradingSetup, action, trade)
                 if (transaction){
                     trade.sellTransactions.push(transaction)
-                    tradingSetup.firstAmount = MathUtils.SubtractNumbers(tradingSetup.firstAmount, transaction.offeredAmount)
+                    // tradingSetup.firstAmount = MathUtils.SubtractNumbers(tradingSetup.firstAmount, transaction.offeredAmount)
                     TradingSetupTradeModelUtils.UpdateSellTransaction(trade, tradingSetup, transaction)
                     TradingSetupTradeModelUtils.UpdateSellTransactionsStatus(trade)
                 }
@@ -280,13 +280,13 @@ export class TradingService implements OnApplicationBootstrap
             TradingSetupTradeModelUtils.UpdateSellTransactionsStatus(trade)
         }
         if (trade.status === TradingSetupTradeTransactionStatus.SELL_PARTIALLY_DONE){
-            const transaction = await this.transactionService.makeTransaction(tradingSetup, new TradingSetupActionModel(trade.currentAction.type, -1))
+            const transaction = await this.transactionService.makeTransaction(tradingSetup, new TradingSetupActionModel(trade.currentAction.type, -1), trade)
             if (transaction){
                 trade.sellTransactions.push(transaction)
-                tradingSetup.firstAmount = MathUtils.SubtractNumbers(tradingSetup.firstAmount, transaction.offeredAmount)
+                // tradingSetup.firstAmount = MathUtils.SubtractNumbers(tradingSetup.firstAmount, transaction.offeredAmount)
                 TradingSetupTradeModelUtils.UpdateSellTransaction(trade, tradingSetup, transaction)
                 TradingSetupTradeModelUtils.UpdateSellTransactionsStatus(trade)
-            }else if (!this.transactionService.canMakeTransaction(tradingSetup, new TradingSetupActionModel(trade.currentAction.type, -1))){
+            }else if (!this.transactionService.canMakeTransaction(tradingSetup, new TradingSetupActionModel(trade.currentAction.type, -1), trade)){
                 //failing to make the transaction due to not enough funds left -> releasing
                 trade.status = TradingSetupTradeTransactionStatus.COMPLETE
             }

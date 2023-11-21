@@ -40,6 +40,8 @@ export class TradingSetupTradeModelUtils
         trade.id = transaction.transactionId
         trade.startingFirstAmount = '0'
         trade.startingSecondAmount = transaction.offeredAmount
+        trade.firstAmount = trade.startingFirstAmount
+        trade.secondAmount = trade.startingSecondAmount
         trade.buyTransaction = transaction
         trade.entryPriceAmount = transaction.priceAmount
         trade.lowestPriceAmount = transaction.priceAmount
@@ -50,9 +52,14 @@ export class TradingSetupTradeModelUtils
         return trade
     }
 
+    static GetTotalAmount(trade: TradingSetupTradeModel, setup: TradingSetupModel) : string
+    {
+        return MathUtils.AddNumbers(MathUtils.MultiplyNumbers(trade.firstAmount, setup.currentPriceAmount), trade.secondAmount)
+    }
+
     static UpdateBuyCompleteTransaction(trade: TradingSetupTradeModel, setup: TradingSetupModel, transaction: TradingTransactionModel)
     {
-        setup.firstAmount = MathUtils.AddNumbers(setup.firstAmount, transaction.firstAmount)
+        // setup.firstAmount = MathUtils.AddNumbers(setup.firstAmount, transaction.firstAmount)
         setup.secondAmount = MathUtils.SubtractNumbers(setup.secondAmount, transaction.secondAmount)
 
         trade.firstAmount = transaction.firstAmount
@@ -88,7 +95,7 @@ export class TradingSetupTradeModelUtils
         trade.status = TradingSetupTradeTransactionStatus.SELL_PENDING
         if (transaction.complete){
 
-            setup.firstAmount = MathUtils.AddNumbers(setup.firstAmount, transaction.offeredAmount)
+            // setup.firstAmount = MathUtils.AddNumbers(setup.firstAmount, transaction.offeredAmount)
             TradingSetupTradeModelUtils.UpdateSellCompleteTransaction(trade, setup, transaction)
 
             console.log('UpdateSellTransaction id: ' + trade.id + " SELL " + setup.config.firstToken + ': ' + trade.firstAmount, ' | ' + setup.config.secondToken + ' : ' + trade.secondAmount + ' avgPrice: ' + MathUtils.Shorten(transaction.priceAmount) + ' vs currentPrice: ' + MathUtils.Shorten(setup.currentPriceAmount))
@@ -97,8 +104,8 @@ export class TradingSetupTradeModelUtils
     }
     static UpdateSellCompleteTransaction(trade: TradingSetupTradeModel, setup: TradingSetupModel, transaction: TradingTransactionModel)
     {
-        setup.firstAmount = MathUtils.SubtractNumbers(setup.firstAmount, transaction.firstAmount)
-        setup.secondAmount = MathUtils.AddNumbers(setup.secondAmount, transaction.secondAmount)
+        // setup.firstAmount = MathUtils.SubtractNumbers(setup.firstAmount, transaction.firstAmount)
+        // setup.secondAmount = MathUtils.AddNumbers(setup.secondAmount, transaction.secondAmount)
 
         trade.firstAmount = MathUtils.SubtractNumbers(trade.firstAmount, transaction.firstAmount)
         trade.secondAmount = MathUtils.AddNumbers(trade.secondAmount, transaction.secondAmount)
@@ -120,7 +127,8 @@ export class TradingSetupTradeModelUtils
 
     static UpdateComplete(trade: TradingSetupTradeModel, setup: TradingSetupModel)
     {
-        // setup.firstAmount = MathUtils.AddNumbers(setup.firstAmount, trade.firstAmount)
+        setup.firstAmount = MathUtils.AddNumbers(setup.firstAmount, trade.firstAmount)
+        setup.secondAmount = MathUtils.AddNumbers(setup.secondAmount, trade.secondAmount)
     }
 
     static UpdateTakeProfit(trade: TradingSetupTradeModel, setup: TradingSetupModel, minAmount: string) : TradingSetupActionModel

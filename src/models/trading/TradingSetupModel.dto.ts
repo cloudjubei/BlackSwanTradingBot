@@ -40,14 +40,27 @@ export default class TradingSetupModel
 
 export class TradingSetupModelUtils
 {
-    static IsRunning(t: TradingSetupModel) : boolean
+    static IsRunning(setup: TradingSetupModel) : boolean
     {
-        return t.status === TradingSetupStatusType.RUNNING || t.status === TradingSetupStatusType.TERMINATING
+        return setup.status === TradingSetupStatusType.RUNNING || setup.status === TradingSetupStatusType.TERMINATING
     }
 
-    static GetTokenPair(t: TradingSetupModel) : string
+    static GetTokenPair(setup: TradingSetupModel) : string
     {
-        return t.config.firstToken + t.config.secondToken
+        return setup.config.firstToken + setup.config.secondToken
+    }
+
+    static GetStartingTotalAmount(setup: TradingSetupModel) : string
+    {
+        return MathUtils.AddNumbers(MathUtils.MultiplyNumbers(setup.startingFirstAmount, setup.currentPriceAmount), setup.startingSecondAmount)
+    }
+
+    static GetTotalAmount(setup: TradingSetupModel) : string
+    {
+        const ownTotalAmount = MathUtils.AddNumbers(MathUtils.MultiplyNumbers(setup.firstAmount, setup.currentPriceAmount), setup.secondAmount)
+        const tradesTotalAmount = MathUtils.AddManyNumbers(setup.openTrades.map(t => TradingSetupTradeModelUtils.GetTotalAmount(t, setup)))
+
+        return MathUtils.AddNumbers(ownTotalAmount, tradesTotalAmount)
     }
 
     static UpdatePrice(t: TradingSetupModel, priceAmount: string) : TradingSetupModel
@@ -89,13 +102,11 @@ export class TradingSetupModelUtils
     {
         if (t.status === TradingSetupStatusType.TERMINATING || t.status === TradingSetupStatusType.TERMINATED) { return }
 
-        const firstInSecondAmount = MathUtils.MultiplyNumbers(t.firstAmount, t.currentPriceAmount)
-        const totalSecondAmount = MathUtils.AddNumbers(firstInSecondAmount, t.secondAmount)
-
-        const startingFirstInSecondAmount = MathUtils.MultiplyNumbers(t.startingFirstAmount, t.currentPriceAmount)
-        const startingTotalSecondAmount = MathUtils.AddNumbers(startingFirstInSecondAmount, t.startingSecondAmount)
-        if (MathUtils.IsBiggerThanZero(startingTotalSecondAmount)){
-            const currentPercentageWinAmount = MathUtils.DivideNumbers(totalSecondAmount, startingTotalSecondAmount)
+        const totalAmount = TradingSetupModelUtils.GetTotalAmount(t)
+        const startingTotalAmount = TradingSetupModelUtils.GetStartingTotalAmount(t)
+        
+        if (MathUtils.IsBiggerThanZero(startingTotalAmount)){
+            const currentPercentageWinAmount = MathUtils.DivideNumbers(totalAmount, startingTotalAmount)
             const triggerPercentage = "" + (1.0 - t.config.terminationPercentageLoss)
             
             if (MathUtils.IsLessThanOrEqualTo(currentPercentageWinAmount, triggerPercentage)){

@@ -8,6 +8,7 @@ import ArrayUtils from "commons/lib/arrayUtils"
 import { IdentityService } from 'logic/identity/identity.service'
 import WalletModel from 'models/WalletModel.dto'
 import TradingSetupActionModel, { TradingSetupActionModelUtils } from 'models/trading/action/TradingSetupActionModel.dto'
+import TradingSetupTradeModel from 'models/trading/trade/TradingSetupTradeModel.dto'
 
 @Injectable()
 export class TransactionService
@@ -136,29 +137,29 @@ export class TransactionService
         return this.client.cancelOrder({  symbol: TradingTransactionModelUtils.GetTokenPair(transaction), orderId: Number(transaction.transactionId) })
     }
 
-    canMakeTransaction(setup: TradingSetupModel, action: TradingSetupActionModel) : boolean
+    canMakeTransaction(setup: TradingSetupModel, action: TradingSetupActionModel, trade: TradingSetupTradeModel = undefined) : boolean
     {
         if (TradingSetupActionModelUtils.IsNoOp(action)) { return false }
 
         const buy = TradingSetupActionModelUtils.IsBuy(action)
-        const tradeAmount = this.getTradeAmount(setup, buy)
+        const tradeAmount = this.getTradeAmount(setup, buy, trade)
 
         return MathUtils.IsBiggerThanZero(tradeAmount)
     }
     
-    async makeTransaction(setup: TradingSetupModel, action: TradingSetupActionModel) : Promise<TradingTransactionModel> | undefined
+    async makeTransaction(setup: TradingSetupModel, action: TradingSetupActionModel, trade: TradingSetupTradeModel = undefined) : Promise<TradingTransactionModel> | undefined
     {
         if (TradingSetupActionModelUtils.IsNoOp(action)) { return }
 
         const buy = TradingSetupActionModelUtils.IsBuy(action)
-        const tradeAmount = this.getTradeAmount(setup, buy)
+        const tradeAmount = this.getTradeAmount(setup, buy, trade)
 
         if (!MathUtils.IsBiggerThanZero(tradeAmount)) { return }
 
         return this.makeTrade(setup, tradeAmount, buy)
     }
 
-    private getTradeAmount(setup: TradingSetupModel, buy: boolean)
+    private getTradeAmount(setup: TradingSetupModel, buy: boolean, trade: TradingSetupTradeModel = undefined)
     {
         let walletAmount = '0'
         let tradeAmount = '0'
@@ -167,10 +168,9 @@ export class TransactionService
             walletAmount = (setup.config.isMarginAccount ? this.walletMarginFree.amounts[setup.config.secondToken] : this.walletFree.amounts[setup.config.secondToken]) ?? '0'
             tradeAmount = setup.secondAmount
             minAmount = this.identityService.getMinAmounts()[setup.config.secondToken]
-
         }else{
             walletAmount = (setup.config.isMarginAccount ? this.walletMarginFree.amounts[setup.config.firstToken] : this.walletFree.amounts[setup.config.firstToken]) ?? '0'
-            tradeAmount = setup.firstAmount
+            tradeAmount = trade?.firstAmount ?? setup.firstAmount
             minAmount = this.identityService.getMinAmounts()[setup.config.firstToken]
         }
         const possibleAmount = MathUtils.Min(walletAmount, tradeAmount)
