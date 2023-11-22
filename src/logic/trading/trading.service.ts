@@ -253,40 +253,31 @@ export class TradingService implements OnApplicationBootstrap
             }
             trade.currentAction = action
             if (TradingSetupActionModelUtils.IsSell(action)){
-                const transaction = await this.transactionService.makeTransaction(tradingSetup, action, trade)
-                if (transaction){
-                    trade.sellTransactions.push(transaction)
-                    // tradingSetup.firstAmount = MathUtils.SubtractNumbers(tradingSetup.firstAmount, transaction.offeredAmount)
-                    TradingSetupTradeModelUtils.UpdateSellTransaction(trade, tradingSetup, transaction)
-                    TradingSetupTradeModelUtils.UpdateSellTransactionsStatus(trade)
-                }
-                
+                trade.status = TradingSetupTradeTransactionStatus.SELL_PARTIALLY_DONE
             }
         }else if (trade.status === TradingSetupTradeTransactionStatus.SELL_PENDING){
-            for(let i=0; i<trade.sellTransactions.length; i++){
-                const sellTransaction = trade.sellTransactions[i]
-                if (!sellTransaction.complete){
-                    try{
-                        const newTransaction = await this.transactionService.updateTransaction(tradingSetup, sellTransaction)
-                        if (newTransaction){
-                            trade.sellTransactions[i] = newTransaction
-                            TradingSetupTradeModelUtils.UpdateSellTransaction(trade, tradingSetup, newTransaction)
-                        }
-                    }catch(e){
-                        console.error("updateOpenTrade SELL_PENDING error: " + JSON.stringify(e))
+            if (trade.sellTransactionPending){
+                try{
+                    const newTransaction = await this.transactionService.updateTransaction(tradingSetup, trade.sellTransactionPending)
+                    if (newTransaction){
+                        TradingSetupTradeModelUtils.UpdateSellTransaction(trade, tradingSetup, newTransaction)
                     }
+                }catch(e){
+                    console.error("updateOpenTrade SELL_PENDING error: " + JSON.stringify(e))
                 }
+            }else{
+                trade.status = TradingSetupTradeTransactionStatus.SELL_PARTIALLY_DONE
             }
-            TradingSetupTradeModelUtils.UpdateSellTransactionsStatus(trade)
         }
         if (trade.status === TradingSetupTradeTransactionStatus.SELL_PARTIALLY_DONE){
             const transaction = await this.transactionService.makeTransaction(tradingSetup, new TradingSetupActionModel(trade.currentAction.type, -1), trade)
             if (transaction){
-                trade.sellTransactions.push(transaction)
-                // tradingSetup.firstAmount = MathUtils.SubtractNumbers(tradingSetup.firstAmount, transaction.offeredAmount)
                 TradingSetupTradeModelUtils.UpdateSellTransaction(trade, tradingSetup, transaction)
-                TradingSetupTradeModelUtils.UpdateSellTransactionsStatus(trade)
             }else if (!this.transactionService.canMakeTransaction(tradingSetup, new TradingSetupActionModel(trade.currentAction.type, -1), trade)){
+                console.log("!!!XXX!!! COULDn'T MAKE A SELL FOR SETUP:")
+                console.log(tradingSetup)
+                console.log("!!!XXX!!! TRADE:")
+                console.log(trade)
                 //failing to make the transaction due to not enough funds left -> releasing
                 trade.status = TradingSetupTradeTransactionStatus.COMPLETE
             }

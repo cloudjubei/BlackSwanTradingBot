@@ -27,7 +27,8 @@ export default class TradingSetupTradeModel
     
     @ApiProperty() status: TradingSetupTradeTransactionStatus = TradingSetupTradeTransactionStatus.BUY_PENDING
     @ApiProperty() buyTransaction: TradingTransactionModel
-    @ApiProperty() sellTransactions: TradingTransactionModel[] = []
+    @ApiProperty() sellTransactionPending: TradingTransactionModel = undefined
+    @ApiProperty() sellTransactionsComplete: TradingTransactionModel[] = []
 
     @ApiProperty() failedDueToMarketMaking: number = 0
 }
@@ -59,7 +60,6 @@ export class TradingSetupTradeModelUtils
 
     static UpdateBuyCompleteTransaction(trade: TradingSetupTradeModel, setup: TradingSetupModel, transaction: TradingTransactionModel)
     {
-        // setup.firstAmount = MathUtils.AddNumbers(setup.firstAmount, transaction.firstAmount)
         setup.secondAmount = MathUtils.SubtractNumbers(setup.secondAmount, transaction.secondAmount)
 
         trade.firstAmount = transaction.firstAmount
@@ -68,6 +68,9 @@ export class TradingSetupTradeModelUtils
         trade.startingSecondAmount = transaction.secondAmount
 
         trade.status = MathUtils.IsZero(trade.firstAmount) && MathUtils.IsZero(trade.secondAmount) ? TradingSetupTradeTransactionStatus.COMPLETE : TradingSetupTradeTransactionStatus.BUY_DONE
+            
+        console.log('UpdateBuyTransaction id: ' + trade.id + " BUY " + setup.config.firstToken + ': ' + trade.firstAmount, ' | ' + setup.config.secondToken + ' : ' + trade.secondAmount + ' avgPrice: ' + MathUtils.Shorten(transaction.priceAmount) + ' vs currentPrice: ' + MathUtils.Shorten(setup.currentPriceAmount))
+        console.log('UpdateBuyTransaction transaction: ' + setup.config.firstToken + ': ' + transaction.firstAmount, ' | ' + setup.config.secondToken + ' : ' + transaction.secondAmount + ' wantedPriceAmount: ' + MathUtils.Shorten(transaction.wantedPriceAmount))
     }
     static UpdateBuyTransaction(trade: TradingSetupTradeModel, setup: TradingSetupModel, transaction: TradingTransactionModel)
     {
@@ -84,45 +87,30 @@ export class TradingSetupTradeModelUtils
 
             setup.secondAmount = MathUtils.AddNumbers(setup.secondAmount, trade.startingSecondAmount)
             TradingSetupTradeModelUtils.UpdateBuyCompleteTransaction(trade, setup, transaction)
-            
-            console.log('UpdateBuyTransaction id: ' + trade.id + " BUY " + setup.config.firstToken + ': ' + trade.firstAmount, ' | ' + setup.config.secondToken + ' : ' + trade.secondAmount + ' avgPrice: ' + MathUtils.Shorten(transaction.priceAmount) + ' vs currentPrice: ' + MathUtils.Shorten(setup.currentPriceAmount))
-            console.log('UpdateBuyTransaction transaction: ' + setup.config.firstToken + ': ' + transaction.firstAmount, ' | ' + setup.config.secondToken + ' : ' + transaction.secondAmount + ' wantedPriceAmount: ' + MathUtils.Shorten(transaction.wantedPriceAmount))
         }
     }
 
     static UpdateSellTransaction(trade: TradingSetupTradeModel, setup: TradingSetupModel, transaction: TradingTransactionModel)
     {
         trade.status = TradingSetupTradeTransactionStatus.SELL_PENDING
+        trade.sellTransactionPending = transaction
+
         if (transaction.complete){
-
-            // setup.firstAmount = MathUtils.AddNumbers(setup.firstAmount, transaction.offeredAmount)
             TradingSetupTradeModelUtils.UpdateSellCompleteTransaction(trade, setup, transaction)
-
-            console.log('UpdateSellTransaction id: ' + trade.id + " SELL " + setup.config.firstToken + ': ' + trade.firstAmount, ' | ' + setup.config.secondToken + ' : ' + trade.secondAmount + ' avgPrice: ' + MathUtils.Shorten(transaction.priceAmount) + ' vs currentPrice: ' + MathUtils.Shorten(setup.currentPriceAmount))
-            console.log('UpdateSellTransaction transaction: ' + setup.config.firstToken + ': ' + transaction.firstAmount, ' | ' + setup.config.secondToken + ' : ' + transaction.secondAmount + ' wantedPriceAmount: ' + MathUtils.Shorten(transaction.wantedPriceAmount))
-        }
+         }
     }
     static UpdateSellCompleteTransaction(trade: TradingSetupTradeModel, setup: TradingSetupModel, transaction: TradingTransactionModel)
     {
-        // setup.firstAmount = MathUtils.SubtractNumbers(setup.firstAmount, transaction.firstAmount)
-        // setup.secondAmount = MathUtils.AddNumbers(setup.secondAmount, transaction.secondAmount)
+        trade.sellTransactionPending = undefined
+        trade.sellTransactionsComplete.push(transaction)
 
         trade.firstAmount = MathUtils.SubtractNumbers(trade.firstAmount, transaction.firstAmount)
         trade.secondAmount = MathUtils.AddNumbers(trade.secondAmount, transaction.secondAmount)
 
-        // trade.status = MathUtils.IsZero(trade.firstAmount) && MathUtils.IsZero(trade.secondAmount) ? TradingSetupTradeTransactionStatus.COMPLETE : TradingSetupTradeTransactionStatus.BUY_DONE
-    }
-
-    static UpdateSellTransactionsStatus(trade: TradingSetupTradeModel)
-    {
-        const isSellComplete = trade.sellTransactions.find(t => !t.complete) === undefined
-        if (isSellComplete) {
-            if (MathUtils.IsBiggerThanZero(trade.firstAmount)){
-                trade.status = TradingSetupTradeTransactionStatus.SELL_PARTIALLY_DONE
-            }else{
-                trade.status = TradingSetupTradeTransactionStatus.COMPLETE
-            }
-        } 
+        trade.status = MathUtils.IsZero(trade.firstAmount) && MathUtils.IsZero(trade.secondAmount) ? TradingSetupTradeTransactionStatus.COMPLETE : TradingSetupTradeTransactionStatus.SELL_PARTIALLY_DONE   
+    
+        console.log('UpdateSellTransaction id: ' + trade.id + " SELL " + setup.config.firstToken + ': ' + trade.firstAmount, ' | ' + setup.config.secondToken + ' : ' + trade.secondAmount + ' avgPrice: ' + MathUtils.Shorten(transaction.priceAmount) + ' vs currentPrice: ' + MathUtils.Shorten(setup.currentPriceAmount))
+        console.log('UpdateSellTransaction transaction: ' + setup.config.firstToken + ': ' + transaction.firstAmount, ' | ' + setup.config.secondToken + ' : ' + transaction.secondAmount + ' wantedPriceAmount: ' + MathUtils.Shorten(transaction.wantedPriceAmount))
     }
 
     static UpdateComplete(trade: TradingSetupTradeModel, setup: TradingSetupModel)
