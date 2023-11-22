@@ -181,6 +181,7 @@ export class TradingService implements OnApplicationBootstrap
         if (setup.manualOverrideAction){
             setup.currentAction = setup.manualOverrideAction
             setup.manualOverrideAction = undefined
+            setup.timeoutTimestamp = 0
         }else{
             setup.currentAction = this.getAction(setup)
         }
