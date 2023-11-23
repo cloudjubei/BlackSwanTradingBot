@@ -269,17 +269,22 @@ export class TradingService implements OnApplicationBootstrap
             }else{
                 trade.status = TradingSetupTradeTransactionStatus.SELL_PARTIALLY_DONE
             }
-        }else if (trade.status === TradingSetupTradeTransactionStatus.SELL_PARTIALLY_DONE){ //needs to be else if so that this can wait for the wallets to update (1 tick)
+        }
+        if (trade.status === TradingSetupTradeTransactionStatus.SELL_PARTIALLY_DONE){
             const transaction = await this.transactionService.makeTransaction(tradingSetup, new TradingSetupActionModel(trade.currentAction.type, -1), trade)
             if (transaction){
                 TradingSetupTradeModelUtils.UpdateSellTransaction(trade, tradingSetup, transaction)
             }else if (!this.transactionService.canMakeTransaction(tradingSetup, new TradingSetupActionModel(trade.currentAction.type, -1), trade)){
+                console.log("!!!XXX!!! COULDn'T MAKE A SELL FOR WALLET FREE:")
+                console.log(tradingSetup.config.isMarginAccount ? this.transactionService.getWalletMarginFree() : this.transactionService.getWalletFree())
+                console.log("!!!XXX!!! COULDn'T MAKE A SELL FOR WALLET LOCKED:")
+                console.log(tradingSetup.config.isMarginAccount ? this.transactionService.getWalletMarginLocked() : this.transactionService.getWalletLocked())
                 console.log("!!!XXX!!! COULDn'T MAKE A SELL FOR SETUP:")
                 console.log(tradingSetup)
                 console.log("!!!XXX!!! TRADE:")
                 console.log(trade)
                 //failing to make the transaction due to not enough funds left -> releasing
-                trade.status = TradingSetupTradeTransactionStatus.COMPLETE
+                // trade.status = TradingSetupTradeTransactionStatus.COMPLETE
             }
         }
         if (trade.status === TradingSetupTradeTransactionStatus.COMPLETE){

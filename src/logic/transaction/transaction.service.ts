@@ -33,9 +33,13 @@ export class TransactionService
         }
     }
 
-    async getWalletFree() : Promise<WalletModel>
+    async updateWalletFree() : Promise<WalletModel>
     {
         await this.updateWalletBalances()
+        return this.walletFree
+    }
+    getWalletFree() : WalletModel
+    {
         return this.walletFree
     }
     getWalletLocked() : WalletModel
@@ -43,9 +47,13 @@ export class TransactionService
         return this.walletLocked
     }
 
-    async getWalletMarginFree() : Promise<WalletModel>
+    async updateWalletMarginFree() : Promise<WalletModel>
     {
         await this.updateMarginWalletBalances()
+        return this.walletMarginFree
+    }
+    getWalletMarginFree() : WalletModel
+    {
         return this.walletMarginFree
     }
     getWalletMarginLocked() : WalletModel

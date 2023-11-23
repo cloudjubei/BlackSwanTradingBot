@@ -22,7 +22,7 @@ export class TransactionController
     @Get('wallet/free')
     async getWalletFree() : Promise<WalletModel>
     {
-        return await this.transactionService.getWalletFree()
+        return await this.transactionService.updateWalletFree()
     }
 
     @Get('wallet/locked')
@@ -34,7 +34,7 @@ export class TransactionController
     @Get('walletMargin/free')
     async getWalletMarginFree() : Promise<WalletModel>
     {
-        return await this.transactionService.getWalletMarginFree()
+        return await this.transactionService.updateWalletMarginFree()
     }
 
     @Get('walletMargin/locked')
