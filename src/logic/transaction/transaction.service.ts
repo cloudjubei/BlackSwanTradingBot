@@ -9,6 +9,7 @@ import { IdentityService } from 'logic/identity/identity.service'
 import WalletModel from 'models/WalletModel.dto'
 import TradingSetupActionModel, { TradingSetupActionModelUtils } from 'models/trading/action/TradingSetupActionModel.dto'
 import TradingSetupTradeModel from 'models/trading/trade/TradingSetupTradeModel.dto'
+import TradingSetupActionType from 'models/trading/action/TradingSetupActionType.dto'
 
 @Injectable()
 export class TransactionService
