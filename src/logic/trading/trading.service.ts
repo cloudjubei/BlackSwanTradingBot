@@ -269,8 +269,7 @@ export class TradingService implements OnApplicationBootstrap
             }else{
                 trade.status = TradingSetupTradeTransactionStatus.SELL_PARTIALLY_DONE
             }
-        }
-        if (trade.status === TradingSetupTradeTransactionStatus.SELL_PARTIALLY_DONE){
+        }else if (trade.status === TradingSetupTradeTransactionStatus.SELL_PARTIALLY_DONE){ //needs to be else if so that this can wait for the wallets to update (1 tick)
             const transaction = await this.transactionService.makeTransaction(tradingSetup, new TradingSetupActionModel(trade.currentAction.type, -1), trade)
             if (transaction){
                 TradingSetupTradeModelUtils.UpdateSellTransaction(trade, tradingSetup, transaction)

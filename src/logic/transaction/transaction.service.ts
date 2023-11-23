@@ -156,7 +156,7 @@ export class TransactionService
 
         if (!MathUtils.IsBiggerThanZero(tradeAmount)) { return }
 
-        return this.makeTrade(setup, tradeAmount, buy)
+        return this.makeTrade(setup, tradeAmount, buy, setup.config.useLimitOrders && action.type !== TradingSetupActionType.STOPLOSS)
     }
 
     private getTradeAmount(setup: TradingSetupModel, buy: boolean, trade: TradingSetupTradeModel = undefined)
@@ -177,12 +177,12 @@ export class TransactionService
         return MathUtils.IsGreaterThanOrEqualTo(possibleAmount, minAmount) ? possibleAmount : '0'
     }
 
-    private async makeTrade(setup: TradingSetupModel, amount: string, buy: boolean) : Promise<TradingTransactionModel | undefined>
+    private async makeTrade(setup: TradingSetupModel, amount: string, buy: boolean, limitOrder: boolean) : Promise<TradingTransactionModel | undefined>
     {
         let response : any | undefined
 
         let wantedPrice = setup.currentPriceAmount
-        if (setup.config.useLimitOrders){
+        if (limitOrder){
             wantedPrice = this.getLimitPrice(setup, buy)
             const quantity = this.getLimitQuantity(amount, wantedPrice, buy)
             console.log("makeTrade LIMIT " + (buy ? "BUY" : "SELL") + " currentPrice: " + setup.currentPriceAmount + " wantedPrice: " + wantedPrice + " quantity: " + quantity + " for setup id: " + setup.id)
