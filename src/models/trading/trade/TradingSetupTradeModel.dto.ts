@@ -97,7 +97,7 @@ export class TradingSetupTradeModelUtils
 
         if (transaction.complete){
             TradingSetupTradeModelUtils.UpdateSellCompleteTransaction(trade, setup, transaction)
-         }
+        }
     }
     static UpdateSellCompleteTransaction(trade: TradingSetupTradeModel, setup: TradingSetupModel, transaction: TradingTransactionModel)
     {
@@ -107,7 +107,7 @@ export class TradingSetupTradeModelUtils
         trade.firstAmount = MathUtils.SubtractNumbers(trade.firstAmount, transaction.firstAmount)
         trade.secondAmount = MathUtils.AddNumbers(trade.secondAmount, transaction.secondAmount)
 
-        trade.status = MathUtils.IsZero(trade.firstAmount) && MathUtils.IsZero(trade.secondAmount) ? TradingSetupTradeTransactionStatus.COMPLETE : TradingSetupTradeTransactionStatus.SELL_PARTIALLY_DONE   
+        trade.status = !MathUtils.IsBiggerThanZero(trade.firstAmount) ? TradingSetupTradeTransactionStatus.COMPLETE : TradingSetupTradeTransactionStatus.SELL_PARTIALLY_DONE   
     
         console.log('UpdateSellTransaction id: ' + trade.id + " SELL " + setup.config.firstToken + ': ' + trade.firstAmount, ' | ' + setup.config.secondToken + ' : ' + trade.secondAmount + ' avgPrice: ' + MathUtils.Shorten(transaction.priceAmount) + ' vs currentPrice: ' + MathUtils.Shorten(setup.currentPriceAmount))
         console.log('UpdateSellTransaction transaction: ' + setup.config.firstToken + ': ' + transaction.firstAmount, ' | ' + setup.config.secondToken + ' : ' + transaction.secondAmount + ' wantedPriceAmount: ' + MathUtils.Shorten(transaction.wantedPriceAmount))

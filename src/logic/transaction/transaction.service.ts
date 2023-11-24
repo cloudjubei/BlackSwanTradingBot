@@ -100,33 +100,36 @@ export class TransactionService
 
     async updateTransaction(setup: TradingSetupModel, transaction: TradingTransactionModel) : Promise<TradingTransactionModel>
     {
-        if (!transaction.complete){
-            return this.getOrder(setup, transaction)
-            .then(response => {
-                console.log("updateTransaction BINANCE RESPONSE:")
-                console.log(response)
-                const newTransaction =  TradingTransactionModelUtils.FromBinanceTransactionResponse(setup, transaction, response)
+        if (transaction.complete){ return transaction }
+        
+        const response = await this.getOrder(setup, transaction)
 
-                if (this.shouldCancel(setup, newTransaction)){
-                    return this.cancelOrder(setup, newTransaction)
-                    .then(response => {
-                        console.log("cancelOrder response: ")
-                        console.log(response)
-                        return TradingTransactionModelUtils.FromBinanceTransactionResponse(setup, newTransaction, response)
-                    }).catch(e => {
-                        if (e.code === -2011){
-                            console.log("CANCEL ERROR UNKNOWN ORDER")
-                        }
-                        console.log("CANCEL ERROR: ")
-                        console.log(e)
-                        newTransaction.complete = true
-                        newTransaction.canceled = true
-                        return newTransaction
-                    }) 
+        console.log("updateTransaction BINANCE RESPONSE:")
+        console.log(response)
+        let newTransaction =  TradingTransactionModelUtils.FromBinanceTransactionResponse(setup, transaction, response)
+
+        if (this.shouldCancel(setup, newTransaction)){
+            try{
+                const cancelResponse = await this.cancelOrder(setup, newTransaction)
+                console.log("cancelOrder response: ")
+                console.log(cancelResponse)
+                newTransaction = TradingTransactionModelUtils.FromBinanceTransactionResponse(setup, newTransaction, cancelResponse)
+            }catch(e){
+                if (e.code === -2011){
+                    console.log("CANCEL ERROR UNKNOWN ORDER")
                 }
-                return newTransaction
-            })
+                console.log("CANCEL ERROR: ")
+                console.log(e)
+                newTransaction.complete = true
+                newTransaction.canceled = true
+            }
         }
+        if (setup.config.isMarginAccount){
+            await this.updateMarginWalletBalances(false)
+        }else{
+            await this.updateWalletBalances(false)
+        }
+        return newTransaction
     }
 
     private async getOrder(setup: TradingSetupModel, transaction: TradingTransactionModel) : Promise<SpotOrder>
@@ -136,7 +139,6 @@ export class TransactionService
         }
         return this.client.getOrder({  symbol: TradingTransactionModelUtils.GetTokenPair(transaction), orderId: Number(transaction.transactionId) })
     }
-
 
     private async cancelOrder(setup: TradingSetupModel, transaction: TradingTransactionModel) : Promise<CancelSpotOrderResult>
     {
