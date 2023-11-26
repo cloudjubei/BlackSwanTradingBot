@@ -275,16 +275,21 @@ export class TradingService implements OnApplicationBootstrap
             if (transaction){
                 TradingSetupTradeModelUtils.UpdateSellTransaction(trade, tradingSetup, transaction)
             }else if (!this.transactionService.canMakeTransaction(tradingSetup, new TradingSetupActionModel(trade.currentAction.type, -1), trade)){
-                console.log("!!!XXX!!! COULDn'T MAKE A SELL FOR WALLET FREE:")
-                console.log(tradingSetup.config.isMarginAccount ? this.transactionService.getWalletMarginFree() : this.transactionService.getWalletFree())
-                console.log("!!!XXX!!! COULDn'T MAKE A SELL FOR WALLET LOCKED:")
-                console.log(tradingSetup.config.isMarginAccount ? this.transactionService.getWalletMarginLocked() : this.transactionService.getWalletLocked())
-                console.log("!!!XXX!!! COULDn'T MAKE A SELL FOR SETUP:")
-                console.log(tradingSetup)
-                console.log("!!!XXX!!! TRADE:")
-                console.log(trade)
-                //failing to make the transaction due to not enough funds left -> releasing
-                trade.status = TradingSetupTradeTransactionStatus.COMPLETE
+                trade.sellFailed += 1
+                if (trade.sellFailed > 10){
+                    console.log("!!!XXX!!! COULDn'T MAKE A SELL FOR WALLET FREE:")
+                    console.log(tradingSetup.config.isMarginAccount ? this.transactionService.getWalletMarginFree() : this.transactionService.getWalletFree())
+                    console.log("!!!XXX!!! COULDn'T MAKE A SELL FOR WALLET LOCKED:")
+                    console.log(tradingSetup.config.isMarginAccount ? this.transactionService.getWalletMarginLocked() : this.transactionService.getWalletLocked())
+                    console.log("!!!XXX!!! COULDn'T MAKE A SELL FOR SETUP:")
+                    console.log(tradingSetup)
+                    console.log("!!!XXX!!! TRADE:")
+                    console.log(trade)
+                    //failing to make the transaction due to not enough funds left -> releasing
+                    trade.status = TradingSetupTradeTransactionStatus.COMPLETE
+                }else{
+                    console.log("!!!XXX!!!SELL FAILED " + trade.sellFailed + " times")
+                }
             }
         }
         if (trade.status === TradingSetupTradeTransactionStatus.COMPLETE){

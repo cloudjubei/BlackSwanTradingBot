@@ -29,6 +29,7 @@ export default class TradingSetupTradeModel
     @ApiProperty() buyTransaction: TradingTransactionModel
     @ApiProperty() sellTransactionPending: TradingTransactionModel = undefined
     @ApiProperty() sellTransactionsComplete: TradingTransactionModel[] = []
+    @ApiProperty() sellFailed: number = 0
 
     @ApiProperty() failedDueToMarketMaking: number = 0
 }
@@ -94,6 +95,7 @@ export class TradingSetupTradeModelUtils
     {
         trade.status = TradingSetupTradeTransactionStatus.SELL_PENDING
         trade.sellTransactionPending = transaction
+        trade.sellFailed = 0
 
         if (transaction.complete){
             TradingSetupTradeModelUtils.UpdateSellCompleteTransaction(trade, setup, transaction)

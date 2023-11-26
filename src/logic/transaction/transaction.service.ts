@@ -124,11 +124,6 @@ export class TransactionService
                 newTransaction.canceled = true
             }
         }
-        if (setup.config.isMarginAccount){
-            await this.updateMarginWalletBalances(false)
-        }else{
-            await this.updateWalletBalances(false)
-        }
         return newTransaction
     }
 
