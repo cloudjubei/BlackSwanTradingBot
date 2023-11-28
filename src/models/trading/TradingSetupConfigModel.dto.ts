@@ -11,6 +11,7 @@ export default class TradingSetupConfigModel
     terminationPercentageLoss?: number = undefined
     takeProfit?: TradingTakeProfitConfigModel = undefined
     stopLoss?: TradingStopLossConfigModel = undefined
+    sellTimeout: number = 0
 
     useLimitOrders: boolean = false
     useLimitMakerOrders: boolean = false
