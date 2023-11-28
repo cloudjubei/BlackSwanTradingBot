@@ -75,8 +75,12 @@ export class TransactionService
         this.client = new MainClient({
             api_key: process.env.BINANCE_API_KEY,
             api_secret: process.env.BINANCE_API_SECRET,
-            baseUrl
+            baseUrl,
+            recvWindow: 5000
         })
+        // },{
+        //     timeout: 10000,
+        // })
 
         // await this.makeMarketTransaction('BTCBUSD', '41795.75', true)
         // await this.makeMarketTransaction('BTCFDUSD', '0.00246', false, true)
@@ -326,11 +330,11 @@ export class TransactionService
             const symbols = ArrayUtils.FilterUnique(orders.map(o => o.symbol))
             Promise.all(symbols.map(symbol => this.client.cancelAllSymbolOrders({ symbol })))
             .catch((err) => {
-                console.error('getAccountInformation error: ', err);
+                console.error('cancelAllSymbolOrders error: ', err);
             })
         })
         .catch((err) => {
-            console.error('getAccountInformation error: ', err);
+            console.error('getOpenOrders error: ', err);
         })
     }
 
