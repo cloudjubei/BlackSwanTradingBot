@@ -286,8 +286,11 @@ export class TradingService implements OnApplicationBootstrap
                 // console.log(tradingSetup)
                 console.log("!!!XXX!!! TRADE:")
                 console.log(trade)
-                    //failing to make the transaction due to not enough funds left -> releasing
-                    // trade.status = TradingSetupTradeTransactionStatus.COMPLETE
+
+                if (!this.transactionService.isTransactionAboveMinLimit(tradingSetup, new TradingSetupActionModel(trade.currentAction.type, -1), trade)){
+                    console.log("!!!XXX!!! TRADE failing to make the transaction due to not passing min limit -> releasing")
+                    trade.status = TradingSetupTradeTransactionStatus.COMPLETE
+                }
             }
         }
         if (trade.status === TradingSetupTradeTransactionStatus.COMPLETE){

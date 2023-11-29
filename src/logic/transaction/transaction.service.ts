@@ -147,12 +147,22 @@ export class TransactionService
         return this.client.cancelOrder({  symbol: TradingTransactionModelUtils.GetTokenPair(transaction), orderId: Number(transaction.transactionId) })
     }
 
+    isTransactionAboveMinLimit(setup: TradingSetupModel, action: TradingSetupActionModel, trade: TradingSetupTradeModel = undefined) : boolean
+    {
+        const buy = TradingSetupActionModelUtils.IsBuy(action)
+
+        const minAmount = this.getMinAmount(setup, buy)
+        const tradeAmount = this.getTradeAmount(setup, buy, trade)
+
+        return MathUtils.IsGreaterThanOrEqualTo(tradeAmount, minAmount)
+    }
+
     canMakeTransaction(setup: TradingSetupModel, action: TradingSetupActionModel, trade: TradingSetupTradeModel = undefined) : boolean
     {
         if (TradingSetupActionModelUtils.IsNoOp(action)) { return false }
 
         const buy = TradingSetupActionModelUtils.IsBuy(action)
-        const tradeAmount = this.getTradeAmount(setup, buy, trade)
+        const tradeAmount = this.getPossibleTradeAmount(setup, buy, trade)
 
         return MathUtils.IsBiggerThanZero(tradeAmount)
     }
@@ -162,27 +172,34 @@ export class TransactionService
         if (TradingSetupActionModelUtils.IsNoOp(action)) { return }
 
         const buy = TradingSetupActionModelUtils.IsBuy(action)
-        const tradeAmount = this.getTradeAmount(setup, buy, trade)
+        const tradeAmount = this.getPossibleTradeAmount(setup, buy, trade)
 
         if (!MathUtils.IsBiggerThanZero(tradeAmount)) { return }
 
         return this.makeTrade(setup, tradeAmount, buy, setup.config.useLimitOrders && action.type !== TradingSetupActionType.STOPLOSS)
     }
 
-    private getTradeAmount(setup: TradingSetupModel, buy: boolean, trade: TradingSetupTradeModel = undefined)
+    private getAvailableWalletAmount(setup: TradingSetupModel, buy: boolean) : string
     {
-        let walletAmount = '0'
-        let tradeAmount = '0'
-        let minAmount = '0'
-        if (buy){
-            walletAmount = (setup.config.isMarginAccount ? this.walletMarginFree.amounts[setup.config.secondToken] : this.walletFree.amounts[setup.config.secondToken]) ?? '0'
-            tradeAmount = setup.secondAmount
-            minAmount = this.identityService.getMinAmounts()[setup.config.secondToken]
-        }else{
-            walletAmount = (setup.config.isMarginAccount ? this.walletMarginFree.amounts[setup.config.firstToken] : this.walletFree.amounts[setup.config.firstToken]) ?? '0'
-            tradeAmount = trade?.firstAmount ?? setup.firstAmount
-            minAmount = this.identityService.getMinAmounts()[setup.config.firstToken]
-        }
+        const token = buy ? setup.config.secondToken : setup.config.firstToken
+        return (setup.config.isMarginAccount ? this.walletMarginFree.amounts[token] : this.walletFree.amounts[token]) ?? '0'
+    }
+    private getMinAmount(setup: TradingSetupModel, buy: boolean) : string
+    {
+        const token = buy ? setup.config.secondToken : setup.config.firstToken
+        return this.identityService.getMinAmounts()[token]
+    }
+    private getTradeAmount(setup: TradingSetupModel, buy: boolean, trade: TradingSetupTradeModel = undefined) : string
+    {
+        return buy ? setup.secondAmount : trade?.firstAmount ?? setup.firstAmount
+    }
+
+    private getPossibleTradeAmount(setup: TradingSetupModel, buy: boolean, trade: TradingSetupTradeModel = undefined)
+    {
+        const walletAmount = this.getAvailableWalletAmount(setup, buy)
+        const minAmount = this.getMinAmount(setup, buy)
+        const tradeAmount = this.getTradeAmount(setup, buy, trade)
+
         const possibleAmount = MathUtils.Min(walletAmount, tradeAmount)
         return MathUtils.IsGreaterThanOrEqualTo(possibleAmount, minAmount) ? possibleAmount : '0'
     }
