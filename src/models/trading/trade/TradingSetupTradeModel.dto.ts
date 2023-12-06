@@ -157,7 +157,8 @@ export class TradingSetupTradeModelUtils
         
         const stopLoss = setup.config.stopLoss
         if (stopLoss){
-            const triggerAmount = MathUtils.MultiplyNumbers(trade.entryPriceAmount, "" + (1.0 - stopLoss.percentage))
+            const thresholdAmount = stopLoss.isBasedOnMaxPrice ? trade.highestPriceAmount : trade.entryPriceAmount
+            const triggerAmount = MathUtils.MultiplyNumbers(thresholdAmount, "" + (1.0 - stopLoss.percentage))
             if (MathUtils.IsLessThanOrEqualTo(setup.currentPriceAmount, triggerAmount)){
                 return new TradingSetupActionModel(TradingSetupActionType.STOPLOSS, -1)
             }
