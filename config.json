@@ -1,20 +1,36 @@
 {
     "minimum_amounts": {
         "BTC": "0.001",
-        "USDT": "10.0",
         "FDUSD": "10.0",
-        "XRP": "50.0"
+        "XRP": "50.0",
+        "ETH": "0.05",
+        "DOT": "5.0",
+        "DOGE": "1000.0",
+        "SOL": "0.5",
+        "LTC": "0.5"
     },
     "default_host" : "http://52.29.230.39",
     "socket_timeout" : 1000,
     "prices": {
-        "BTCUSDT": {
-            "port": 3002
-        },
         "BTCFDUSD": {
             "port": 3002
         },
-        "XRPUSDT": {
+        "XRPFDUSD": {
+            "port": 3002
+        },
+        "ETHFDUSD": {
+            "port": 3002
+        },
+        "DOTFDUSD": {
+            "port": 3002
+        },
+        "DOGEFDUSD": {
+            "port": 3002
+        },
+        "SOLFDUSD": {
+            "port": 3002
+        },
+        "LTCFDUSD": {
             "port": 3002
         }
     },
@@ -23,6 +39,7 @@
         "1m",
         "5m",
         "15m",
+        "1h",
         "1d"
     ],
     "signals" : {
@@ -48,6 +65,24 @@
             "port": 3005
         },
         "bollingerLowWithRSI30Oversold": {
+            "port": 3005
+        },
+        "dump1_00_01": {
+            "port": 3005
+        },
+        "pump1_00_01": {
+            "port": 3005
+        },
+        "dump3_00_05": {
+            "port": 3005
+        },
+        "pump3_00_05": {
+            "port": 3005
+        },
+        "dump5_00_10": {
+            "port": 3005
+        },
+        "pump5_00_10": {
             "port": 3005
         }
     }
