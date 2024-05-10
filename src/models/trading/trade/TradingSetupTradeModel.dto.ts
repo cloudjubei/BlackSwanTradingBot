@@ -15,6 +15,8 @@ export default class TradingSetupTradeModel
     @ApiProperty() startingSecondAmount: string = "0"
     @ApiProperty() firstAmount: string = "0"
     @ApiProperty() secondAmount: string = "0"
+    @ApiProperty() feesAmount: string = "0"
+    @ApiProperty() feesAsset: string = ""
 
     @ApiProperty(Timestamp) startTimestamp: number = 0
     @ApiProperty(Timestamp) updateTimestamp: number = 0
@@ -43,6 +45,8 @@ export class TradingSetupTradeModelUtils
         trade.startingSecondAmount = transaction.offeredAmount
         trade.firstAmount = trade.startingFirstAmount
         trade.secondAmount = trade.startingSecondAmount
+        trade.feesAmount = transaction.commissionAsset === transaction.firstToken ? MathUtils.MultiplyNumbers(transaction.priceAmount, transaction.commissionAmount) : transaction.commissionAmount
+        trade.feesAsset = transaction.commissionAsset
         trade.buyTransaction = transaction
         trade.entryPriceAmount = transaction.priceAmount
         trade.lowestPriceAmount = transaction.priceAmount
@@ -66,6 +70,11 @@ export class TradingSetupTradeModelUtils
         trade.secondAmount = '0'
         trade.startingFirstAmount = '0'
         trade.startingSecondAmount = transaction.secondAmount
+
+        if (MathUtils.IsBiggerThanZero(transaction.commissionAmount)){
+            trade.feesAsset = transaction.commissionAmount
+            trade.feesAmount = transaction.commissionAsset === transaction.firstToken ? MathUtils.MultiplyNumbers(transaction.commissionAmount, transaction.priceAmount) : transaction.commissionAmount
+        }
 
         trade.status = MathUtils.IsZero(trade.firstAmount) && MathUtils.IsZero(trade.secondAmount) ? TradingSetupTradeTransactionStatus.COMPLETE : TradingSetupTradeTransactionStatus.BUY_DONE
             
@@ -106,6 +115,11 @@ export class TradingSetupTradeModelUtils
 
         trade.firstAmount = MathUtils.SubtractNumbers(trade.firstAmount, transaction.firstAmount)
         trade.secondAmount = MathUtils.AddNumbers(trade.secondAmount, transaction.secondAmount)
+        if (MathUtils.IsBiggerThanZero(transaction.commissionAmount)){
+            trade.feesAsset = transaction.commissionAmount
+            const feesAmount = transaction.commissionAsset === transaction.firstToken ? MathUtils.MultiplyNumbers(transaction.commissionAmount, transaction.priceAmount) : transaction.commissionAmount
+            trade.feesAmount = MathUtils.AddNumbers(trade.feesAmount, feesAmount)
+        }
 
         trade.status = !MathUtils.IsBiggerThanZero(trade.firstAmount) ? TradingSetupTradeTransactionStatus.COMPLETE : TradingSetupTradeTransactionStatus.SELL_PARTIALLY_DONE   
     
@@ -117,6 +131,10 @@ export class TradingSetupTradeModelUtils
     {
         setup.firstAmount = MathUtils.AddNumbers(setup.firstAmount, trade.firstAmount)
         setup.secondAmount = MathUtils.AddNumbers(setup.secondAmount, trade.secondAmount)
+
+        setup.feesAsset = trade.feesAsset
+        setup.feesAmount = MathUtils.AddNumbers(setup.feesAmount, trade.feesAmount)
+        setup.feesLastTradeAmount = trade.feesAmount
     }
 
     static UpdateTakeProfit(trade: TradingSetupTradeModel, setup: TradingSetupModel, minAmount: string) : TradingSetupActionModel

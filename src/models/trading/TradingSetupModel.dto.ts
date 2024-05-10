@@ -34,6 +34,9 @@ export default class TradingSetupModel
 
     @ApiProperty() openTrades: TradingSetupTradeModel[] = []
     @ApiProperty() finishedTrades: TradingSetupTradeModel[] = []
+    @ApiProperty() feesAmount: string = "0"
+    @ApiProperty() feesLastTradeAmount: string = "0"
+    @ApiProperty() feesAsset: string = ""
 
     @ApiProperty() failedDueToMarketMaking: number = 0
 }

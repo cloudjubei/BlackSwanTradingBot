@@ -12,6 +12,8 @@ export default class TradingTransactionModel
     wantedPriceAmount: string
     priceAmount: string
     transactionId: string
+    commissionAmount: string
+    commissionAsset: string
     complete: boolean = false
     canceled: boolean = false
     checks: number = 0
@@ -35,13 +37,20 @@ export class TradingTransactionModelUtils
         const firstAmount = parseFloat(response['executedQty'] ?? '0') ?? 0
         const secondAmount = parseFloat(response['cummulativeQuoteQty'] ?? '0') ?? 0
         let priceAmount = '' + (parseFloat(response['price'] ?? '0') ?? 0)
+        let commissionAsset = firstToken
+        let commissionAmount = '0'
 
-        if (TradingTransactionModelUtils.IsCompleted(response) && MathUtils.IsZero(priceAmount)){
+        if (TradingTransactionModelUtils.IsCompleted(response)){
+            const needsToSetPrice = MathUtils.IsZero(priceAmount)
             const fullAmount = "" + firstAmount
             const fills = response['fills'] ?? []
             for (const fill of fills){
-                const percentAmount = MathUtils.DivideNumbers(fill['qty'], fullAmount)
-                priceAmount = MathUtils.AddNumbers(priceAmount, MathUtils.MultiplyNumbers(percentAmount, fill['price']))
+                if (needsToSetPrice){
+                    const percentAmount = MathUtils.DivideNumbers(fill['qty'], fullAmount)
+                    priceAmount = MathUtils.AddNumbers(priceAmount, MathUtils.MultiplyNumbers(percentAmount, fill['price']))
+                }
+                commissionAsset = fill['commissionAsset']
+                commissionAmount = MathUtils.AddNumbers(commissionAmount, fill['commission'])
             }
         }
         // response['transactTime']
@@ -55,6 +64,8 @@ export class TradingTransactionModelUtils
             offeredAmount,
             wantedPriceAmount,
             priceAmount,
+            commissionAmount,
+            commissionAsset,
             transactionId: '' + response['orderId'],
             complete: TradingTransactionModelUtils.IsCompleted(response),
             canceled: TradingTransactionModelUtils.IsResponseCanceled(response),
