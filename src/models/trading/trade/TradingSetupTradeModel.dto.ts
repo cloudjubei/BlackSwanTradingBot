@@ -45,7 +45,7 @@ export class TradingSetupTradeModelUtils
         trade.startingSecondAmount = transaction.offeredAmount
         trade.firstAmount = trade.startingFirstAmount
         trade.secondAmount = trade.startingSecondAmount
-        trade.feesAmount = transaction.commissionAsset === transaction.firstToken ? MathUtils.MultiplyNumbers(transaction.priceAmount, transaction.commissionAmount) : transaction.commissionAmount
+        trade.feesAmount = MathUtils.IsBiggerThanZero(transaction.commissionAmount) ? (transaction.commissionAsset === transaction.firstToken ? MathUtils.MultiplyNumbers(transaction.priceAmount, transaction.commissionAmount) : transaction.commissionAmount) : '0'
         trade.feesAsset = transaction.commissionAsset
         trade.buyTransaction = transaction
         trade.entryPriceAmount = transaction.priceAmount
@@ -71,10 +71,8 @@ export class TradingSetupTradeModelUtils
         trade.startingFirstAmount = '0'
         trade.startingSecondAmount = transaction.secondAmount
 
-        if (MathUtils.IsBiggerThanZero(transaction.commissionAmount)){
-            trade.feesAsset = transaction.commissionAmount
-            trade.feesAmount = transaction.commissionAsset === transaction.firstToken ? MathUtils.MultiplyNumbers(transaction.commissionAmount, transaction.priceAmount) : transaction.commissionAmount
-        }
+        trade.feesAmount = MathUtils.IsBiggerThanZero(transaction.commissionAmount) ? (transaction.commissionAsset === transaction.firstToken ? MathUtils.MultiplyNumbers(transaction.commissionAmount, transaction.priceAmount) : transaction.commissionAmount) : '0'
+        trade.feesAsset = transaction.commissionAmount
 
         trade.status = MathUtils.IsZero(trade.firstAmount) && MathUtils.IsZero(trade.secondAmount) ? TradingSetupTradeTransactionStatus.COMPLETE : TradingSetupTradeTransactionStatus.BUY_DONE
             
@@ -132,9 +130,11 @@ export class TradingSetupTradeModelUtils
         setup.firstAmount = MathUtils.AddNumbers(setup.firstAmount, trade.firstAmount)
         setup.secondAmount = MathUtils.AddNumbers(setup.secondAmount, trade.secondAmount)
 
-        setup.feesAsset = trade.feesAsset
-        setup.feesAmount = MathUtils.AddNumbers(setup.feesAmount, trade.feesAmount)
-        setup.feesLastTradeAmount = trade.feesAmount
+        if (MathUtils.IsBiggerThanZero(trade.feesAmount)){
+            setup.feesAsset = trade.feesAsset
+            setup.feesAmount = MathUtils.AddNumbers(setup.feesAmount, trade.feesAmount)
+            setup.feesLastTradeAmount = trade.feesAmount
+        }
     }
 
     static UpdateTakeProfit(trade: TradingSetupTradeModel, setup: TradingSetupModel, minAmount: string) : TradingSetupActionModel
