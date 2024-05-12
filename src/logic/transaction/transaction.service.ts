@@ -166,7 +166,7 @@ export class TransactionService
 
         if (!MathUtils.IsBiggerThanZero(tradeAmount)) { return }
 
-        return this.makeTrade(setup, tradeAmount, buy, setup.config.useLimitOrders && action.type !== TradingSetupActionType.STOPLOSS)
+        return this.makeTrade(setup, tradeAmount, buy, setup.config.useLimitOrders && action.type !== TradingSetupActionType.TERMINATION)
     }
 
     private getAvailableWalletAmount(setup: TradingSetupModel, buy: boolean) : string

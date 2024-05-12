@@ -33,6 +33,7 @@ export default class TradingSetupTradeModel
     @ApiProperty() sellTransactionsComplete: TradingTransactionModel[] = []
 
     @ApiProperty() failedDueToMarketMaking: number = 0
+    @ApiProperty() stopLossHardSellRetries: number = 0
 }
 
 export class TradingSetupTradeModelUtils
@@ -121,6 +122,13 @@ export class TradingSetupTradeModelUtils
 
         trade.status = !MathUtils.IsBiggerThanZero(trade.firstAmount) ? TradingSetupTradeTransactionStatus.COMPLETE : TradingSetupTradeTransactionStatus.SELL_PARTIALLY_DONE   
     
+        if (trade.status === TradingSetupTradeTransactionStatus.SELL_PARTIALLY_DONE && trade.currentAction.type === TradingSetupActionType.STOPLOSS){
+            trade.stopLossHardSellRetries -= 1
+            if (trade.stopLossHardSellRetries <= 0){
+                trade.currentAction = new TradingSetupActionModel(TradingSetupActionType.TERMINATION, -1)
+            }
+        }
+
         console.log('UpdateSellTransaction id: ' + trade.id + " SELL " + setup.config.firstToken + ': ' + trade.firstAmount, ' | ' + setup.config.secondToken + ' : ' + trade.secondAmount + ' avgPrice: ' + MathUtils.Shorten(transaction.priceAmount) + ' vs currentPrice: ' + MathUtils.Shorten(setup.currentPriceAmount))
         console.log('UpdateSellTransaction transaction: ' + setup.config.firstToken + ': ' + transaction.firstAmount, ' | ' + setup.config.secondToken + ' : ' + transaction.secondAmount + ' wantedPriceAmount: ' + MathUtils.Shorten(transaction.wantedPriceAmount))
     }

@@ -248,6 +248,7 @@ export class TradingService implements OnApplicationBootstrap
                     if (TradingSetupActionModelUtils.IsNoOp(action)){
                         action = tradingSetup.currentAction
                     }else{
+                        trade.stopLossHardSellRetries = tradingSetup.config.stopLoss?.retriesBeforeHardSell ?? 0
                         tradingSetup.timeoutTimestamp = Date.now() + ((tradingSetup.config.stopLoss?.timeout ?? 0) * 1000)
                     }
                 }
