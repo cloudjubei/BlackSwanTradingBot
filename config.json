@@ -15,6 +15,9 @@
     "default_host" : "http://52.29.230.39",
     "socket_timeout" : 1000,
     "prices": {
+        "BTCFDUSD": {
+            "port": 3002
+        },
         "BTCUSDT": {
             "port": 3002
         },
