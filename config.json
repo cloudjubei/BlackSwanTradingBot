@@ -15,9 +15,6 @@
     "default_host" : "http://52.29.230.39",
     "socket_timeout" : 1000,
     "prices": {
-        "BTCFDUSD": {
-            "port": 3002
-        },
         "BTCUSDT": {
             "port": 3002
         },
@@ -35,27 +32,13 @@
         },
         "XRPUSDT": {
             "port": 3002
-        },
-        "DOTUSDT": {
-            "port": 3002
-        },
-        "DOGEUSDT": {
-            "port": 3002
-        },
-        "SOLUSDT": {
-            "port": 3002
-        },
-        "LTCUSDT": {
-            "port": 3002
         }
     },
     "intervals": [
         "1s",
         "1m",
         "5m",
-        "15m",
-        "1h",
-        "1d"
+        "15m"
     ],
     "signals" : {
         "bollingerHighSignal": {
