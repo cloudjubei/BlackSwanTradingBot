@@ -55,6 +55,7 @@ export class TradingSetupTradeModelUtils
         trade.status = transaction.complete ? TradingSetupTradeTransactionStatus.BUY_DONE : TradingSetupTradeTransactionStatus.BUY_PENDING
         trade.startTimestamp = Date.now()
         trade.updateTimestamp = trade.startTimestamp
+        
         return trade
     }
 
@@ -77,8 +78,8 @@ export class TradingSetupTradeModelUtils
 
         trade.status = MathUtils.IsZero(trade.firstAmount) && MathUtils.IsZero(trade.secondAmount) ? TradingSetupTradeTransactionStatus.COMPLETE : TradingSetupTradeTransactionStatus.BUY_DONE
             
-        console.log('UpdateBuyTransaction id: ' + trade.id + " BUY " + setup.config.firstToken + ': ' + trade.firstAmount, ' | ' + setup.config.secondToken + ' : ' + trade.secondAmount + ' avgPrice: ' + MathUtils.Shorten(transaction.priceAmount) + ' vs currentPrice: ' + MathUtils.Shorten(setup.currentPriceAmount))
-        console.log('UpdateBuyTransaction transaction: ' + setup.config.firstToken + ': ' + transaction.firstAmount, ' | ' + setup.config.secondToken + ' : ' + transaction.secondAmount + ' wantedPriceAmount: ' + MathUtils.Shorten(transaction.wantedPriceAmount))
+        // console.log('UpdateBuyTransaction id: ' + trade.id + " BUY " + setup.config.firstToken + ': ' + trade.firstAmount, ' | ' + setup.config.secondToken + ' : ' + trade.secondAmount + ' avgPrice: ' + MathUtils.Shorten(transaction.priceAmount) + ' vs currentPrice: ' + MathUtils.Shorten(setup.currentPriceAmount))
+        // console.log('UpdateBuyTransaction transaction: ' + setup.config.firstToken + ': ' + transaction.firstAmount, ' | ' + setup.config.secondToken + ' : ' + transaction.secondAmount + ' wantedPriceAmount: ' + MathUtils.Shorten(transaction.wantedPriceAmount))
     }
     static UpdateBuyTransaction(trade: TradingSetupTradeModel, setup: TradingSetupModel, transaction: TradingTransactionModel)
     {
@@ -115,6 +116,8 @@ export class TradingSetupTradeModelUtils
         trade.firstAmount = MathUtils.SubtractNumbers(trade.firstAmount, transaction.firstAmount)
         trade.secondAmount = MathUtils.AddNumbers(trade.secondAmount, transaction.secondAmount)
         if (MathUtils.IsBiggerThanZero(transaction.commissionAmount)){
+            console.log(`UpdateSellCompleteTransaction transaction.commissionAmount: ${transaction.commissionAmount}`)
+            console.log(`UpdateSellCompleteTransaction transaction.commissionAsset: ${transaction.commissionAsset}`)
             trade.feesAsset = transaction.commissionAmount
             const feesAmount = transaction.commissionAsset === transaction.firstToken ? MathUtils.MultiplyNumbers(transaction.commissionAmount, transaction.priceAmount) : transaction.commissionAmount
             trade.feesAmount = MathUtils.AddNumbers(trade.feesAmount, feesAmount)
@@ -129,8 +132,8 @@ export class TradingSetupTradeModelUtils
             }
         }
 
-        console.log('UpdateSellTransaction id: ' + trade.id + " SELL " + setup.config.firstToken + ': ' + trade.firstAmount, ' | ' + setup.config.secondToken + ' : ' + trade.secondAmount + ' avgPrice: ' + MathUtils.Shorten(transaction.priceAmount) + ' vs currentPrice: ' + MathUtils.Shorten(setup.currentPriceAmount))
-        console.log('UpdateSellTransaction transaction: ' + setup.config.firstToken + ': ' + transaction.firstAmount, ' | ' + setup.config.secondToken + ' : ' + transaction.secondAmount + ' wantedPriceAmount: ' + MathUtils.Shorten(transaction.wantedPriceAmount))
+        // console.log('UpdateSellTransaction id: ' + trade.id + " SELL " + setup.config.firstToken + ': ' + trade.firstAmount, ' | ' + setup.config.secondToken + ' : ' + trade.secondAmount + ' avgPrice: ' + MathUtils.Shorten(transaction.priceAmount) + ' vs currentPrice: ' + MathUtils.Shorten(setup.currentPriceAmount))
+        // console.log('UpdateSellTransaction transaction: ' + setup.config.firstToken + ': ' + transaction.firstAmount, ' | ' + setup.config.secondToken + ' : ' + transaction.secondAmount + ' wantedPriceAmount: ' + MathUtils.Shorten(transaction.wantedPriceAmount))
     }
 
     static UpdateComplete(trade: TradingSetupTradeModel, setup: TradingSetupModel)
@@ -139,6 +142,7 @@ export class TradingSetupTradeModelUtils
         setup.secondAmount = MathUtils.AddNumbers(setup.secondAmount, trade.secondAmount)
 
         if (MathUtils.IsBiggerThanZero(trade.feesAmount)){
+            console.log(`UpdateComplete trade.feesAmount: ${trade.feesAmount}`)
             setup.feesAsset = trade.feesAsset
             setup.feesAmount = MathUtils.AddNumbers(setup.feesAmount, trade.feesAmount)
             setup.feesLastTradeAmount = trade.feesAmount

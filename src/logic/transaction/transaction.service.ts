@@ -98,8 +98,8 @@ export class TransactionService
         
         const response = await this.getOrder(setup, transaction)
 
-        console.log("updateTransaction BINANCE RESPONSE:")
-        console.log(response)
+        // console.log("updateTransaction BINANCE RESPONSE:")
+        // console.log(response)
         let newTransaction =  TradingTransactionModelUtils.FromBinanceTransactionResponse(setup, transaction, response)
 
         if (this.shouldCancel(setup, newTransaction)){
@@ -202,7 +202,7 @@ export class TransactionService
         if (limitOrder){
             wantedPrice = this.getLimitPrice(setup, buy)
             const quantity = this.getLimitQuantity(amount, wantedPrice, buy)
-            console.log("makeTrade LIMIT " + (buy ? "BUY" : "SELL") + " currentPrice: " + setup.currentPriceAmount + " wantedPrice: " + wantedPrice + " quantity: " + quantity + " for setup id: " + setup.id)
+            // console.log("makeTrade LIMIT " + (buy ? "BUY" : "SELL") + " currentPrice: " + setup.currentPriceAmount + " wantedPrice: " + wantedPrice + " quantity: " + quantity + " for setup id: " + setup.id)
             response = await this.makeLimitTransaction(TradingSetupConfigModelUtils.GetTokenPair(setup.config), quantity, wantedPrice, buy, setup.config.useLimitMakerOrders, setup.config.isMarginAccount)
         }else{
             response = await this.makeMarketTransaction(TradingSetupConfigModelUtils.GetTokenPair(setup.config), amount, buy, setup.config.isMarginAccount)

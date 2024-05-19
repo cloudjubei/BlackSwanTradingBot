@@ -54,6 +54,7 @@ export class TradingTransactionModelUtils
             }
         }
         // response['transactTime']
+        console.log(`FromBinanceResponse commissionAsset: ${commissionAsset} commissionAmount: ${commissionAmount}`)
 
         return {
             buy: response['side'] === 'BUY',

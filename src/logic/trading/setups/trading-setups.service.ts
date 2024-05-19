@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common'
 import TradingSetupConfigModel from 'models/trading/TradingSetupConfigModel.dto'
 import TradingSetupModel, { TradingSetupModelUtils } from 'models/trading/TradingSetupModel.dto'
 import StorageUtils from "commons/lib/storageUtils"
-import TradingSetupStatusType from 'models/trading/TradingSetupStatusType.dto'
 
 @Injectable()
 export class TradingSetupsService
@@ -14,7 +13,12 @@ export class TradingSetupsService
         const setupsFile = StorageUtils.getFile('setups.json')
         const setups = JSON.parse(setupsFile) as TradingSetupModel[]
         for(const setup of setups){
-            this.setups[setup.id] = setup
+            const setupModel = Object.assign(new TradingSetupModel(), setup)
+            if (setupModel.feesAmount == 'NaN') {
+                setupModel.feesAmount = '0'
+                setupModel.feesAsset = setup.config.firstToken
+            }
+            this.setups[setup.id] = setupModel
         }
     }
   
