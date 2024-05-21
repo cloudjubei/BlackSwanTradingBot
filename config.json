@@ -21,19 +21,10 @@
         "BTCUSDT": {
             "port": 3002
         },
-        "BTCTUSD": {
-            "port": 3002
-        },
-        "BTCUSDC": {
-            "port": 3002
-        },
         "ETHUSDT": {
             "port": 3002
         },
-        "ETHUSDC": {
-            "port": 3002
-        },
-        "XRPUSDT": {
+        "ETHFDUSD": {
             "port": 3002
         }
     },
